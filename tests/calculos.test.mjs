@@ -1,7 +1,7 @@
 // Rodar com: node --test tests/
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contagemRegressiva, precoUnitario, prioritarios, resumo, statusAoDesmarcar, valorEstimado } from "../js/calculos.js";
+import { contagemRegressiva, maisBarata, totalOpcao, precoUnitario, prioritarios, resumo, statusAoDesmarcar, valorEstimado } from "../js/calculos.js";
 import { esc, lerNumero, urlOk } from "../js/formato.js";
 
 const item = (o) => ({ id: "x", quantidade: 1, status: "nao_iniciado", prioridade: "importante", etapa: "pesquisar", ordem: 0, preco_estimado: null, preco_pago: null, ...o });
@@ -57,6 +57,15 @@ test("contagem regressiva", () => {
   assert.equal(c.meses, 26);
   assert.equal(c.dias, 806);
   assert.equal(contagemRegressiva("2020-01-01", new Date(2026, 0, 1)).dias, 0);
+});
+
+test("frete: total só com frete informado; mais barata compara total", () => {
+  assert.equal(totalOpcao({ preco: 100, frete: 20 }), 120);
+  assert.equal(totalOpcao({ preco: 100, frete: null }), null);
+  const ops = [{ id: "a", preco: 100, frete: 50 }, { id: "b", preco: 120, frete: 0 }, { id: "c", preco: 90, frete: null }];
+  assert.deepEqual(maisBarata(ops), { id: "b", comFrete: true });
+  assert.deepEqual(maisBarata([{ id: "a", preco: 100, frete: null }, { id: "c", preco: 90, frete: null }]), { id: "c", comFrete: false });
+  assert.equal(maisBarata([{ id: "a", preco: null, frete: null }]), null);
 });
 
 test("formato: números brasileiros, links e escape", () => {

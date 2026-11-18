@@ -1,6 +1,6 @@
 // Geração do HTML de cada tela. Só lê o estado; ações ficam em app.js.
-import { ETAPAS, ITEM_NOVO, ORDEM_PRIORIDADE, PRIORIDADES, QTD_PRIORITARIOS, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
-import { comprado, contagemRegressiva, prioritarios, resumo } from "./calculos.js";
+import { BUSCAS, ETAPAS, ITEM_NOVO, ORDEM_PRIORIDADE, PRIORIDADES, QTD_PRIORITARIOS, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
+import { comprado, contagemRegressiva, maisBarata, prioritarios, resumo, totalOpcao } from "./calculos.js";
 import { brl, dataBR, esc, numeroParaCampo, pct } from "./formato.js";
 import { ICONES, barra, cabecalhoPagina, foto, linkExterno, progresso, segmentos } from "./ui.js";
 import { S, comodos, escolhidaDe, estimadoDe, fotoDe, itemPorId, meuId, nomeDe, opcoesDe } from "./estado.js";
@@ -204,10 +204,16 @@ function formItem(it, novo) {
 }
 
 const formOpcao = () => `<form id="form-opcao" class="fields callout option-form">
-    <label class="field">Produto / modelo<input class="input" name="nome" required></label>
+    <div class="field full"><label for="op-url">Link do produto</label>
+      <div class="link-row"><input class="input" id="op-url" name="url" type="url" inputmode="url" placeholder="Cole aqui o link da loja" autocomplete="off">
+        <button class="btn sm ghost" type="button" data-act="colarLink">Colar</button></div>
+      <button class="btn sm self-start" type="button" data-act="lerLink">Preencher pelo link</button>
+      <p class="small muted link-msg" id="link-msg" role="status" aria-live="polite">Funciona com as principais lojas. Confira os dados antes de salvar.</p></div>
+    <input type="hidden" name="consultado_em">
+    <label class="field full">Produto / modelo<input class="input" name="nome" required></label>
     <label class="field">Loja<input class="input" name="loja"></label>
     <label class="field">Preço (R$)<input class="input" name="preco" inputmode="decimal"></label>
-    <label class="field">Link de compra<input class="input" name="url" type="url" placeholder="https://"></label>
+    <label class="field">Frete (R$)<input class="input" name="frete" inputmode="decimal" placeholder="Vazio se não souber"></label>
     <label class="field full">Foto (link da imagem)<input class="input" name="imagem_url" type="url" placeholder="https://"></label>
     <label class="field full">Características<textarea class="input" name="caracteristicas" placeholder="Capacidade, medidas, voltagem, cor…"></textarea></label>
     <label class="field full">Observações<textarea class="input" name="observacoes"></textarea></label>
@@ -223,6 +229,7 @@ function opcaoHTML(o) {
       <div class="between"><span class="eyebrow">${esc(o.loja || "Loja não informada")}${o.escolhida ? " · Escolhida" : ""}</span></div>
       <div class="opt-name">${esc(o.nome)}</div>
       <div class="opt-price">${brl(o.preco)}</div>
+      <div class="small muted">${o.frete == null ? "Frete não informado" : o.frete > 0 ? `Frete ${brl(o.frete)} · Total ${brl(totalOpcao(o))}` : "Frete grátis"}${o.consultado_em ? ` · Preço de ${dataBR(o.consultado_em)}` : ""}</div>
       ${o.caracteristicas ? `<div class="small muted pre">${esc(o.caracteristicas)}</div>` : ""}
       ${o.observacoes ? `<div class="small pre">${esc(o.observacoes)}</div>` : ""}
       ${quemGostou ? `<div class="small muted">Gostou: ${esc(quemGostou)}</div>` : ""}
@@ -237,17 +244,24 @@ function opcaoHTML(o) {
 }
 
 function tabelaComparacao(opcoes) {
-  const menorPreco = Math.min(...opcoes.filter((o) => o.preco != null).map((o) => o.preco));
+  const melhor = maisBarata(opcoes);
   const preferencia = (o) => (o.escolhida ? "Escolhida" : o.curtidas.length ? `${o.curtidas.length} ${plural(o.curtidas.length, "curtida", "curtidas")}` : "—");
-  return `<div class="compare-wrap"><table class="compare"><thead><tr><th>Produto</th><th>Loja</th><th>Preço</th><th>Preferência</th></tr></thead><tbody>
-    ${opcoes.map((o) => `<tr><td>${esc(o.nome)}</td><td>${esc(o.loja || "—")}</td><td class="nowrap">${brl(o.preco)}${o.preco === menorPreco ? ' <span class="muted small">menor</span>' : ""}</td><td>${preferencia(o)}</td></tr>`).join("")}
-  </tbody></table></div>`;
+  const total = (o) => (totalOpcao(o) != null ? brl(totalOpcao(o)) : o.preco != null ? `${brl(o.preco)} + frete` : "—");
+  const selo = melhor && `<span class="badge">${melhor.comFrete ? "Menor total" : "Menor preço"}</span>`;
+  return `<div class="compare-wrap"><table class="compare"><thead><tr><th>Produto</th><th>Loja</th><th>Preço</th><th>Frete</th><th>Total</th><th>Preferência</th></tr></thead><tbody>
+    ${opcoes.map((o) => `<tr><td>${esc(o.nome)}${melhor?.id === o.id ? ` ${selo}` : ""}</td><td>${esc(o.loja || "—")}</td><td class="nowrap">${brl(o.preco)}</td><td class="nowrap">${o.frete == null ? "—" : brl(o.frete)}</td><td class="nowrap">${total(o)}</td><td>${preferencia(o)}</td></tr>`).join("")}
+  </tbody></table></div>
+  ${melhor && !melhor.comFrete ? `<p class="small muted">Sem frete informado, a comparação usa só o preço do produto.</p>` : ""}`;
 }
+
+const buscaOutrasLojas = (it) => `<div class="busca-lojas"><span class="small muted">Procurar “${esc(it.nome)}” em:</span>
+    <div class="opt-actions">${BUSCAS.map(([loja, link]) => `<a class="pill" href="${esc(link(it.nome))}" target="_blank" rel="noopener noreferrer nofollow">${loja} ${ICONES.ext}</a>`).join("")}</div></div>`;
 
 function secaoOpcoes(it) {
   const opcoes = opcoesDe(it.id);
   return `<div>
     <div class="between"><div><span class="eyebrow">Comparação</span><h3 class="h2 sub-title">Opções encontradas</h3></div><button class="btn sm ghost" data-act="toggleOpcao">${S.novaOpcao ? "Cancelar" : "Adicionar opção"}</button></div>
+    ${buscaOutrasLojas(it)}
     ${S.novaOpcao ? formOpcao() : ""}
     <div class="options">${opcoes.map(opcaoHTML).join("") || `<p class="muted small">Nenhuma opção ainda. Adicionem links de lojas diferentes para comparar.</p>`}</div>
     ${opcoes.length > 1 ? tabelaComparacao(opcoes) : ""}

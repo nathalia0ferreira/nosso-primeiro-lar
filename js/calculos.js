@@ -17,6 +17,22 @@ export function valorEstimado(item, opcoes) {
   return unitario == null ? null : unitario * item.quantidade;
 }
 
+/** Preço + frete; null quando o frete não foi informado (não dá para comparar como se fosse grátis). */
+export const totalOpcao = (o) => (o.preco == null || o.frete == null ? null : Number(o.preco) + Number(o.frete));
+
+/**
+ * Opção mais barata para destacar: compara o total (com frete) entre as que têm frete;
+ * se nenhuma tiver, compara só o preço e avisa que é sem frete.
+ */
+export function maisBarata(opcoes) {
+  const comTotal = opcoes.filter((o) => totalOpcao(o) != null);
+  const base = comTotal.length ? comTotal : opcoes.filter((o) => o.preco != null);
+  if (!base.length) return null;
+  const valor = (o) => (comTotal.length ? totalOpcao(o) : Number(o.preco));
+  const melhor = base.reduce((a, b) => (valor(b) < valor(a) ? b : a));
+  return { id: melhor.id, comFrete: comTotal.length > 0 };
+}
+
 /** Gasto só conta para itens comprados; preco_pago já é o total da compra. */
 export const valorPago = (item) => (comprado(item) ? Number(item.preco_pago || 0) : 0);
 

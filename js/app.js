@@ -1,6 +1,6 @@
 // Ponto de entrada: navegação, eventos da interface e sessão.
 import { statusAoDesmarcar } from "./calculos.js";
-import { esc, lerNumero, textoOuNulo, urlOk } from "./formato.js";
+import { esc, lerNumero, numeroParaCampo, textoOuNulo, urlOk } from "./formato.js";
 import { lerForm, toast } from "./ui.js";
 import { S, carregar, escolhidaDe, itemPorId, meuId, opcoesDe, ouvirMudancas, salvar, sb } from "./estado.js";
 import { comodosHTML, painelItem, telaEsquecidos, telaEtapas, telaFinancas, telaInicio, telaLista, telaLogin, telaSemAcesso } from "./telas.js";
@@ -52,6 +52,7 @@ function render() {
 let renderPendente = false;
 let rascunho = false; // há texto digitado e ainda não salvo num formulário do painel
 const editando = () => rascunho || document.activeElement?.matches("form .input, #orc");
+const rascunhoAtivo = () => { rascunho = true; };
 function liberarRender() {
   rascunho = false;
   if (renderPendente) { renderPendente = false; render(); }
@@ -198,6 +199,55 @@ function apagarComentario(comentarioId) {
   );
 }
 
+/* ---------- preencher opção pelo link ---------- */
+const MSG_LINK = {
+  loja_nao_suportada: "Essa loja ainda não está na lista suportada. Preencha à mão.",
+  produto_nao_identificado: "Não encontrei os dados do produto nessa página. Preencha à mão.",
+  loja_indisponivel: "A loja não deixou ler a página agora. Preencha à mão ou tente mais tarde.",
+  redirecionamento_bloqueado: "O link leva para fora das lojas suportadas.",
+  nao_e_pagina: "Esse link não abre uma página de produto.",
+  tempo_esgotado: "A loja demorou demais para responder. Tente de novo.",
+  sem_acesso: "Sem permissão para usar esta função.",
+};
+
+async function colarLink() {
+  try {
+    document.getElementById("op-url").value = (await navigator.clipboard.readText()).trim();
+  } catch {
+    toast("Não consegui acessar a área de transferência. Segure no campo e escolha Colar.", true);
+  }
+}
+
+async function lerLink() {
+  const form = document.getElementById("form-opcao");
+  const campo = (n) => form.elements[n];
+  const msg = document.getElementById("link-msg");
+  const url = campo("url").value.trim();
+  if (!/^https:\/\//i.test(url)) { msg.textContent = "Cole um link que comece com https://"; campo("url").focus(); return; }
+  const botao = form.querySelector('[data-act="lerLink"]');
+  botao.disabled = true; msg.textContent = "Lendo a página da loja…";
+  const { data, error } = await sb.functions.invoke("ler-produto", { body: { url } });
+  botao.disabled = false;
+  if (error || !data?.produto) {
+    msg.textContent = MSG_LINK[data?.erro] || "Não foi possível ler o link agora. Preencha à mão.";
+    return;
+  }
+  const p = data.produto;
+  const emReais = !p.moeda || p.moeda === "BRL";
+  const preencher = (n, v) => { if (v != null && v !== "") campo(n).value = v; };
+  preencher("nome", p.nome);
+  preencher("loja", data.loja);
+  preencher("url", data.url);
+  if (emReais) preencher("preco", numeroParaCampo(p.preco));
+  preencher("imagem_url", p.imagem);
+  const detalhes = [p.marca && `Marca: ${p.marca}`, p.modelo && `Modelo: ${p.modelo}`, p.gtin && `Código de barras: ${p.gtin}`,
+    p.sku && `Código na loja: ${p.sku}`, p.disponivel === false && "Indisponível na consulta"].filter(Boolean).join("\n");
+  if (detalhes && !campo("caracteristicas").value) campo("caracteristicas").value = detalhes;
+  campo("consultado_em").value = data.consultado_em;
+  rascunhoAtivo();
+  msg.textContent = `Dados de ${data.loja} preenchidos${p.preco == null || !emReais ? ", sem preço" : ""}. Confira, informe o frete se souber e salve.`;
+}
+
 function alternarComodo(el) {
   const c = el.dataset.c;
   S.abertos.has(c) ? S.abertos.delete(c) : S.abertos.add(c);
@@ -230,7 +280,8 @@ async function enviarOpcao(form) {
   const url = textoOuNulo(d.url), imagem = textoOuNulo(d.imagem_url);
   if ((url && !urlOk(url)) || (imagem && !urlOk(imagem))) return toast("Os links precisam começar com https://", true);
   const nova = await salvar("opcoes", "insert", {
-    item_id: S.item, nome: d.nome.trim(), loja: textoOuNulo(d.loja), preco: lerNumero(d.preco), url, imagem_url: imagem,
+    item_id: S.item, nome: d.nome.trim(), loja: textoOuNulo(d.loja), preco: lerNumero(d.preco), frete: lerNumero(d.frete),
+    consultado_em: d.consultado_em || null, url, imagem_url: imagem,
     caracteristicas: textoOuNulo(d.caracteristicas), observacoes: textoOuNulo(d.observacoes),
   });
   S.opcoes.push(nova); S.novaOpcao = false;
@@ -264,6 +315,8 @@ const ACOES = {
   escolher: (el, it) => alternarEscolha(el.dataset.id, it),
   apagarOpcao: (el) => apagarOpcao(el.dataset.id),
   apagarComentario: (el) => apagarComentario(el.dataset.id),
+  colarLink,
+  lerLink,
 };
 
 $app.addEventListener("click", async (e) => {
