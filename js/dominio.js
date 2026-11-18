@@ -22,6 +22,7 @@ export const QTD_PRIORITARIOS = 8;
 /** Atalhos de busca em outras lojas (só abrem a busca da loja; nenhum preço é inventado). */
 export const BUSCAS = [
   ["Google Shopping", (q) => `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(q)}`],
+  ["JáCotei", (q) => `https://jacotei.com.br/search?q=${encodeURIComponent(q)}`],
   ["Buscapé", (q) => `https://www.buscape.com.br/search?q=${encodeURIComponent(q)}`],
   ["Mercado Livre", (q) => `https://lista.mercadolivre.com.br/${encodeURIComponent(q.trim().replace(/\s+/g, "-"))}`],
   ["Amazon", (q) => `https://www.amazon.com.br/s?k=${encodeURIComponent(q)}`],

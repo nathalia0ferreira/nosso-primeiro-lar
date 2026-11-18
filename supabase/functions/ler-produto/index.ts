@@ -1,7 +1,7 @@
 // Lê os dados de UM link de produto colado por um membro do planejamento.
-// Segurança: só https, só domínios de lojas conhecidas (cada redirecionamento é conferido de novo),
-// tempo e tamanho limitados, e só responde a quem é membro.
-import { extrairProduto, lojaDoLink } from "./extrair.ts";
+// Segurança: só https e nomes de domínio públicos; o DNS de cada destino (inclusive redirecionamentos)
+// não pode apontar para rede interna; tempo e tamanho limitados; só responde a quem é membro.
+import { extrairProduto, ipPrivado, lojaDoLink } from "./extrair.ts";
 
 const ORIGENS = ["https://nathalia0ferreira.github.io", "http://localhost:5173"];
 const MAX_REDIRECIONAMENTOS = 4;
@@ -41,11 +41,22 @@ async function lerAte(resp: Response, limite: number) {
   return new TextDecoder().decode(tudo.subarray(0, limite));
 }
 
-/** Segue redirecionamentos manualmente, validando cada destino contra a lista de lojas. */
+/** O nome precisa existir e TODOS os endereços dele precisam ser públicos. */
+async function destinoPublico(host: string) {
+  const enderecos: string[] = [];
+  for (const tipo of ["A", "AAAA"] as const) {
+    try { enderecos.push(...(await Deno.resolveDns(host, tipo))); } catch { /* sem registro desse tipo */ }
+  }
+  // shortcut: o fetch resolve o DNS de novo (rebinding teórico); aceitável para um app de 2 usuários logados.
+  return enderecos.length > 0 && !enderecos.some(ipPrivado);
+}
+
+/** Segue redirecionamentos manualmente, validando cada destino (nome e DNS). */
 async function buscarPagina(inicio: URL) {
   let url = inicio;
   const sinal = AbortSignal.timeout(TEMPO_MS);
   for (let i = 0; i <= MAX_REDIRECIONAMENTOS; i++) {
+    if (!(await destinoPublico(url.hostname))) return { erro: "endereco_bloqueado" };
     const resp = await fetch(url, {
       redirect: "manual", signal: sinal,
       headers: { "User-Agent": "Mozilla/5.0 (compatible; NossoPrimeiroLar/1.0)", "Accept": "text/html", "Accept-Language": "pt-BR" },
@@ -82,7 +93,8 @@ Deno.serve(async (req) => {
     const final = lojaDoLink(r.final.href)!;
     const produto = extrairProduto(r.html);
     if (!produto.nome) return responder({ erro: "produto_nao_identificado", loja: final.loja });
-    return responder({ produto, loja: final.loja, url: r.final.href, consultado_em: new Date().toISOString() });
+    const loja = produto.vendedor && produto.vendedor !== final.loja ? `${produto.vendedor} (via ${final.loja})` : final.loja;
+    return responder({ produto, loja, url: r.final.href, consultado_em: new Date().toISOString() });
   } catch (e) {
     return responder({ erro: e instanceof DOMException && e.name === "TimeoutError" ? "tempo_esgotado" : "falha" });
   }

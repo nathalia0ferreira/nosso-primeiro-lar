@@ -201,10 +201,11 @@ function apagarComentario(comentarioId) {
 
 /* ---------- preencher opção pelo link ---------- */
 const MSG_LINK = {
-  loja_nao_suportada: "Essa loja ainda não está na lista suportada. Preencha à mão.",
+  loja_nao_suportada: "Esse link não é de um site público. Confira o endereço.",
+  endereco_bloqueado: "Esse endereço não pode ser aberto. Confira o link.",
   produto_nao_identificado: "Não encontrei os dados do produto nessa página. Preencha à mão.",
   loja_indisponivel: "A loja não deixou ler a página agora. Preencha à mão ou tente mais tarde.",
-  redirecionamento_bloqueado: "O link leva para fora das lojas suportadas.",
+  redirecionamento_bloqueado: "O link redireciona para um endereço que não pode ser aberto.",
   nao_e_pagina: "Esse link não abre uma página de produto.",
   tempo_esgotado: "A loja demorou demais para responder. Tente de novo.",
   sem_acesso: "Sem permissão para usar esta função.",

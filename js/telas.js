@@ -208,7 +208,7 @@ const formOpcao = () => `<form id="form-opcao" class="fields callout option-form
       <div class="link-row"><input class="input" id="op-url" name="url" type="url" inputmode="url" placeholder="Cole aqui o link da loja" autocomplete="off">
         <button class="btn sm ghost" type="button" data-act="colarLink">Colar</button></div>
       <button class="btn sm self-start" type="button" data-act="lerLink">Preencher pelo link</button>
-      <p class="small muted link-msg" id="link-msg" role="status" aria-live="polite">Funciona com as principais lojas. Confira os dados antes de salvar.</p></div>
+      <p class="small muted link-msg" id="link-msg" role="status" aria-live="polite">Funciona com a maioria das lojas e comparadores, como o JáCotei. Confira os dados antes de salvar.</p></div>
     <input type="hidden" name="consultado_em">
     <label class="field full">Produto / modelo<input class="input" name="nome" required></label>
     <label class="field">Loja<input class="input" name="loja"></label>
