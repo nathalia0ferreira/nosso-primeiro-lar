@@ -58,6 +58,12 @@ h1, h2, h3 { font-weight: 400; margin: 0; }
 
 /* Hero */
 .hero { padding: 48px 0 8px; display: grid; gap: 28px; }
+.hero.page { padding-top: 36px; }
+.page-title { font-size: clamp(40px, 6vw, 64px); }
+.lead { max-width: 620px; }
+.progress .bar { margin-top: 10px; }
+.progress.thin .bar { margin-top: 8px; }
+.progress.thin .between span { color: var(--muted); }
 .hero-meta { display: flex; gap: 40px; flex-wrap: wrap; align-items: end; }
 .count { font-family: var(--serif); font-size: 44px; line-height: 1; }
 
