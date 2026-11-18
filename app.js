@@ -458,27 +458,22 @@ $app.addEventListener("submit", async (e) => {
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && S.item) document.querySelector('[data-act="fechar"]')?.click(); });
 
 /* ---------- autenticação ---------- */
-function renderAuth(modo = "entrar") {
+// Só login: as duas contas já existem e novos membros só entram pela tabela convites.
+function renderAuth() {
   $app.innerHTML = `<div class="auth"><form class="auth-box view" id="auth">
     <div><span class="eyebrow">Espaço privado</span><h1 class="display" style="font-size:52px;margin-top:10px">Nosso Primeiro Lar</h1><p class="muted">Planejamento da nossa mudança em fevereiro de 2029.</p></div>
-    <div class="seg" style="justify-self:start"><button type="button" data-modo="entrar" class="${modo === "entrar" ? "on" : ""}">Entrar</button><button type="button" data-modo="criar" class="${modo === "criar" ? "on" : ""}">Criar conta</button></div>
-    ${modo === "criar" ? `<label class="field">Seu nome<input class="input" name="nome" required autocomplete="given-name"></label>` : ""}
     <label class="field">E-mail<input class="input" name="email" type="email" required autocomplete="email"></label>
-    <label class="field">Senha<input class="input" name="senha" type="password" required minlength="6" autocomplete="${modo === "criar" ? "new-password" : "current-password"}"></label>
-    <button class="btn" type="submit">${modo === "criar" ? "Criar conta" : "Entrar"}</button>
+    <label class="field">Senha<input class="input" name="senha" type="password" required autocomplete="current-password"></label>
+    <button class="btn" type="submit">Entrar</button>
     <p class="muted small" id="auth-msg"></p>
   </form></div>`;
   const form = document.getElementById("auth");
-  form.querySelectorAll("[data-modo]").forEach((b) => (b.onclick = () => renderAuth(b.dataset.modo)));
   form.onsubmit = async (e) => {
     e.preventDefault(); const d = lerForm(form); const msg = document.getElementById("auth-msg"); const btn = form.querySelector('[type="submit"]');
     btn.disabled = true; msg.textContent = "Aguarde…";
-    const r = modo === "criar"
-      ? await sb.auth.signUp({ email: d.email, password: d.senha, options: { data: { nome: d.nome.trim() }, emailRedirectTo: location.origin + location.pathname } })
-      : await sb.auth.signInWithPassword({ email: d.email, password: d.senha });
+    const r = await sb.auth.signInWithPassword({ email: d.email, password: d.senha });
     btn.disabled = false;
-    if (r.error) msg.textContent = r.error.message.includes("Invalid login") ? "E-mail ou senha incorretos." : "Não foi possível continuar: " + r.error.message;
-    else if (modo === "criar" && !r.data.session) msg.textContent = "Conta criada. Confirme pelo link enviado ao seu e-mail e depois entre.";
+    if (r.error) msg.textContent = "Não foi possível entrar. Confira o e-mail e a senha.";
   };
 }
 function renderSemAcesso() {
