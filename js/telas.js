@@ -194,7 +194,8 @@ function formItem(it, novo) {
     <label class="field">Etapa${select("etapa", rotulosEtapa, it.etapa)}</label>
     <label class="field">Preço estimado por unidade (R$)<input class="input" name="preco_estimado" inputmode="decimal" value="${numeroParaCampo(it.preco_estimado)}" placeholder="${!novo && escolhidaDe(it.id) ? "Usando a opção escolhida" : ""}"></label>
     <label class="field">Valor pago no total (R$)<input class="input" name="preco_pago" inputmode="decimal" value="${numeroParaCampo(it.preco_pago)}"></label>
-    <label class="field">Foto (link da imagem)<input class="input" name="imagem_url" type="url" placeholder="https://" value="${esc(it.imagem_url)}"></label>
+    <label class="field full">Link do produto<input class="input" name="link_produto" type="url" inputmode="url" placeholder="Cole o link da loja" autocomplete="off" value="${esc(it.link_produto)}">
+      <span class="small muted">A foto vem da página do produto. O botão Achar mais barato usa este link.</span></label>
     <label class="field full">Descrição<textarea class="input" name="descricao">${esc(it.descricao)}</textarea></label>
     <label class="field full">Nossa preferência<textarea class="input" name="preferencia" placeholder="Cor, tamanho, material, marca, o que cada um prefere…">${esc(it.preferencia)}</textarea></label>
     <label class="field full">Observações<textarea class="input" name="observacoes">${esc(it.observacoes)}</textarea></label>
@@ -203,9 +204,9 @@ function formItem(it, novo) {
   </form>`;
 }
 
-const formOpcao = () => `<form id="form-opcao" class="fields callout option-form">
+const formOpcao = (it) => `<form id="form-opcao" class="fields callout option-form">
     <div class="field full"><label for="op-url">Link do produto</label>
-      <div class="link-row"><input class="input" id="op-url" name="url" type="url" inputmode="url" placeholder="Cole aqui o link da loja" autocomplete="off">
+      <div class="link-row"><input class="input" id="op-url" name="url" type="url" inputmode="url" placeholder="Cole aqui o link da loja" autocomplete="off" value="${esc(it.link_produto)}">
         <button class="btn sm ghost" type="button" data-act="colarLink">Colar</button></div>
       <div class="row"><button class="btn sm" type="button" data-act="acharMaisBarato">Achar mais barato</button>
         <button class="btn sm ghost" type="button" data-act="lerLink">Preencher pelo link</button></div>
@@ -259,7 +260,7 @@ function secaoOpcoes(it) {
   const opcoes = opcoesDe(it.id);
   return `<div>
     <div class="between"><div><span class="eyebrow">Comparação</span><h3 class="h2 sub-title">Opções encontradas</h3></div><button class="btn sm ghost" data-act="toggleOpcao">${S.novaOpcao ? "Cancelar" : "Adicionar opção"}</button></div>
-    ${S.novaOpcao ? formOpcao() : `<button class="btn achar" type="button" data-act="acharMaisBarato">Achar mais barato</button>`}
+    ${S.novaOpcao ? formOpcao(it) : `<button class="btn achar" type="button" data-act="acharMaisBarato">Achar mais barato</button>`}
     <div class="options">${opcoes.map(opcaoHTML).join("") || `<p class="muted small">Nenhuma opção ainda. Adicionem links de lojas diferentes para comparar.</p>`}</div>
     ${opcoes.length > 1 ? tabelaComparacao(opcoes) : ""}
   </div>`;

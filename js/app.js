@@ -221,8 +221,10 @@ async function colarLink() {
 }
 
 /** Pesquisa o produto do link colado em outras lojas. Sem o formulário aberto, abre ele para colar o link. */
-function acharMaisBarato() {
+function acharMaisBarato(_el, it) {
   const campo = document.getElementById("op-url");
+  const salvo = it?.link_produto;
+  if (salvo && !campo?.value.trim()) return window.open(acharPromo(salvo), "_blank", "noopener");
   if (!campo) {
     S.novaOpcao = true; render();
     document.getElementById("link-msg").textContent = "Cole o link do produto e toque em Achar mais barato.";
@@ -279,18 +281,33 @@ function dadosDoItem(d) {
     nome: d.nome.trim(), comodo: d.comodo.trim(), categoria: d.categoria.trim() || "Geral",
     quantidade: Math.max(1, parseInt(d.quantidade) || 1), prioridade: d.prioridade, etapa: d.etapa,
     preco_estimado: lerNumero(d.preco_estimado), preco_pago: lerNumero(d.preco_pago),
-    imagem_url: textoOuNulo(d.imagem_url), descricao: textoOuNulo(d.descricao),
+    link_produto: textoOuNulo(d.link_produto), descricao: textoOuNulo(d.descricao),
     preferencia: textoOuNulo(d.preferencia), observacoes: textoOuNulo(d.observacoes), esquecido: !!d.esquecido,
   };
 }
 
 async function enviarItem(form) {
   const valores = dadosDoItem(lerForm(form));
-  if (valores.imagem_url && !urlOk(valores.imagem_url)) return toast("O link da foto precisa começar com https://", true);
-  if (S.item !== "novo") return atualizarItem(S.item, valores, "Alterações salvas");
-  const novo = await salvar("itens", "insert", { ...valores, ordem: ORDEM_ITEM_NOVO });
-  S.itens.push(novo); S.item = novo.id; S.abertos.add(novo.comodo);
-  render(); toast("Item adicionado");
+  if (valores.link_produto && !/^https:\/\//i.test(valores.link_produto)) return toast("O link do produto precisa começar com https://", true);
+  let id = S.item;
+  const linkAntes = itemPorId(id)?.link_produto ?? null;
+  if (id !== "novo") {
+    await atualizarItem(id, valores, "Alterações salvas");
+  } else {
+    const novo = await salvar("itens", "insert", { ...valores, ordem: ORDEM_ITEM_NOVO });
+    S.itens.push(novo); S.item = id = novo.id; S.abertos.add(novo.comodo);
+    render(); toast("Item adicionado");
+  }
+  const it = itemPorId(id);
+  if (it?.link_produto && (it.link_produto !== linkAntes || !it.imagem_url)) fotoDoLink(it);
+}
+
+/** Busca a foto que a própria loja usa na página do produto e guarda no item. */
+async function fotoDoLink(it) {
+  const { data } = await sb.functions.invoke("ler-produto", { body: { url: it.link_produto } });
+  const imagem = data?.produto?.imagem;
+  if (imagem) return atualizarItem(it.id, { imagem_url: imagem }, "Foto do produto atualizada");
+  toast("Não consegui pegar a foto dessa página.", true);
 }
 
 async function enviarOpcao(form) {
