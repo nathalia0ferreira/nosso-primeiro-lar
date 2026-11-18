@@ -1,7 +1,7 @@
 // Geração do HTML de cada tela. Só lê o estado; ações ficam em app.js.
-import { BUSCAS, ETAPAS, ITEM_NOVO, acharPromo, ORDEM_PRIORIDADE, PRIORIDADES, QTD_PRIORITARIOS, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
+import { ETAPAS, ITEM_NOVO, ORDEM_PRIORIDADE, PRIORIDADES, QTD_PRIORITARIOS, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
 import { comprado, contagemRegressiva, maisBarata, prioritarios, resumo, totalOpcao } from "./calculos.js";
-import { brl, dataBR, esc, numeroParaCampo, pct, urlOk } from "./formato.js";
+import { brl, dataBR, esc, numeroParaCampo, pct } from "./formato.js";
 import { ICONES, barra, cabecalhoPagina, foto, linkExterno, progresso, segmentos } from "./ui.js";
 import { S, comodos, escolhidaDe, estimadoDe, fotoDe, itemPorId, meuId, nomeDe, opcoesDe } from "./estado.js";
 
@@ -207,8 +207,8 @@ const formOpcao = () => `<form id="form-opcao" class="fields callout option-form
     <div class="field full"><label for="op-url">Link do produto</label>
       <div class="link-row"><input class="input" id="op-url" name="url" type="url" inputmode="url" placeholder="Cole aqui o link da loja" autocomplete="off">
         <button class="btn sm ghost" type="button" data-act="colarLink">Colar</button></div>
-      <div class="row"><button class="btn sm" type="button" data-act="lerLink">Preencher pelo link</button>
-        <button class="btn sm ghost" type="button" data-act="acharMaisBarato">Achar mais barato</button></div>
+      <div class="row"><button class="btn sm" type="button" data-act="acharMaisBarato">Achar mais barato</button>
+        <button class="btn sm ghost" type="button" data-act="lerLink">Preencher pelo link</button></div>
       <p class="small muted link-msg" id="link-msg" role="status" aria-live="polite">Funciona com a maioria das lojas e comparadores, como o JáCotei. Confira os dados antes de salvar.</p></div>
     <input type="hidden" name="consultado_em">
     <label class="field full">Produto / modelo<input class="input" name="nome" required></label>
@@ -237,7 +237,6 @@ function opcaoHTML(o) {
       <div class="small muted">Adicionada por ${esc(nomeDe(o.criado_por))} em ${dataBR(o.criado_em)}</div>
       <div class="opt-actions">
         ${linkExterno(o.url, "Abrir loja")}
-        ${urlOk(o.url) ? `<a class="pill" href="${esc(acharPromo(o.url))}" target="_blank" rel="noopener noreferrer nofollow">Achar mais barato ${ICONES.ext}</a>` : ""}
         <button class="pill ${gosto ? "on" : ""}" data-act="curtir" data-id="${o.id}" aria-pressed="${gosto}">${ICONES.heart} ${gosto ? "Eu gosto" : "Gostei"}</button>
         <button class="pill ${o.escolhida ? "on" : ""}" data-act="escolher" data-id="${o.id}" aria-pressed="${o.escolhida}">${o.escolhida ? "Escolhida" : "Escolher esta"}</button>
         <button class="pill danger" data-act="apagarOpcao" data-id="${o.id}" aria-label="Remover opção ${esc(o.nome)}">Remover</button>
@@ -256,14 +255,11 @@ function tabelaComparacao(opcoes) {
   ${melhor && !melhor.comFrete ? `<p class="small muted">Sem frete informado, a comparação usa só o preço do produto.</p>` : ""}`;
 }
 
-const buscaOutrasLojas = (it) => `<div class="busca-lojas"><div class="opt-actions">${BUSCAS.map(([, link]) => `<a class="pill" href="${esc(link(it.nome))}" target="_blank" rel="noopener noreferrer nofollow">Achar mais barato ${ICONES.ext}</a>`).join("")}</div></div>`;
-
 function secaoOpcoes(it) {
   const opcoes = opcoesDe(it.id);
   return `<div>
     <div class="between"><div><span class="eyebrow">Comparação</span><h3 class="h2 sub-title">Opções encontradas</h3></div><button class="btn sm ghost" data-act="toggleOpcao">${S.novaOpcao ? "Cancelar" : "Adicionar opção"}</button></div>
-    ${buscaOutrasLojas(it)}
-    ${S.novaOpcao ? formOpcao() : ""}
+    ${S.novaOpcao ? formOpcao() : `<button class="btn achar" type="button" data-act="acharMaisBarato">Achar mais barato</button>`}
     <div class="options">${opcoes.map(opcaoHTML).join("") || `<p class="muted small">Nenhuma opção ainda. Adicionem links de lojas diferentes para comparar.</p>`}</div>
     ${opcoes.length > 1 ? tabelaComparacao(opcoes) : ""}
   </div>`;

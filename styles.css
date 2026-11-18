@@ -282,5 +282,5 @@ textarea.input { min-height: 84px; resize: vertical; }
 .link-row { display: flex; gap: var(--s2); }
 .link-row .input { flex: 1; min-width: 0; }
 .link-msg { margin: 0; }
-.busca-lojas { display: grid; gap: var(--s2); margin-top: var(--s4); }
 .badge { display: inline-block; margin-left: var(--s1); padding: 2px 8px; border-radius: 999px; font-size: 12px; background: var(--accent); color: var(--bg); white-space: nowrap; }
+.btn.achar { margin-top: var(--s4); justify-self: start; }

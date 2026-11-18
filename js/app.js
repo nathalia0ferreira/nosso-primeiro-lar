@@ -220,9 +220,14 @@ async function colarLink() {
   }
 }
 
-/** Abre o achar.promo com o link colado, para procurar o mesmo produto mais barato. */
+/** Pesquisa o produto do link colado em outras lojas. Sem o formulário aberto, abre ele para colar o link. */
 function acharMaisBarato() {
   const campo = document.getElementById("op-url");
+  if (!campo) {
+    S.novaOpcao = true; render();
+    document.getElementById("link-msg").textContent = "Cole o link do produto e toque em Achar mais barato.";
+    return document.getElementById("op-url").focus();
+  }
   const url = campo.value.trim();
   if (!/^https:\/\//i.test(url)) {
     document.getElementById("link-msg").textContent = "Cole o link do produto primeiro (começando com https://).";
