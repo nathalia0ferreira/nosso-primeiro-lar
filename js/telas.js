@@ -198,7 +198,7 @@ function formItem(it, novo) {
     <label class="field full">Descrição<textarea class="input" name="descricao">${esc(it.descricao)}</textarea></label>
     <label class="field full">Nossa preferência<textarea class="input" name="preferencia" placeholder="Cor, tamanho, material, marca, o que cada um prefere…">${esc(it.preferencia)}</textarea></label>
     <label class="field full">Observações<textarea class="input" name="observacoes">${esc(it.observacoes)}</textarea></label>
-    <label class="row small full muted"><input type="checkbox" class="cbox" name="esquecido" ${it.esquecido ? "checked" : ""}> Item pequeno que costuma ser esquecido</label>
+    <label class="row check-label small full muted"><input type="checkbox" class="cbox" name="esquecido" ${it.esquecido ? "checked" : ""}> Item pequeno que costuma ser esquecido</label>
     <div class="row full"><button class="btn" type="submit">${novo ? "Adicionar à lista" : "Salvar alterações"}</button>${novo ? "" : `<button class="btn danger" type="button" data-act="apagarItem">Remover item</button>`}</div>
   </form>`;
 }

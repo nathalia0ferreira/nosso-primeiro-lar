@@ -278,3 +278,4 @@ textarea.input { min-height: 84px; resize: vertical; }
 .auth-title.sm { font-size: 44px; margin-top: 0; }
 .callout { border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; background: var(--surface); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+.check-label { flex-wrap: nowrap; align-items: center; cursor: pointer; }
