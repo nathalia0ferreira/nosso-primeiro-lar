@@ -36,6 +36,6 @@ export const cabecalhoPagina = (rotulo, titulo, descricao = "") =>
   `<span class="eyebrow">${rotulo}</span><h1 class="display page-title">${titulo}</h1>${descricao ? `<p class="muted lead">${descricao}</p>` : ""}`;
 
 export const segmentos = (opcoes, ativo, atributos) =>
-  `<div class="seg">${opcoes.map(([v, l]) => `<button ${atributos} data-v="${v}" class="${ativo === v ? "on" : ""}">${l}</button>`).join("")}</div>`;
+  `<div class="seg" role="group">${opcoes.map(([v, l]) => `<button type="button" ${atributos} data-v="${v}" class="${ativo === v ? "on" : ""}" aria-pressed="${ativo === v}">${l}</button>`).join("")}</div>`;
 
 export const lerForm = (form) => Object.fromEntries(new FormData(form).entries());

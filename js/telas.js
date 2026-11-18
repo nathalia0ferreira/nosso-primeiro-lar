@@ -86,10 +86,10 @@ export function comodoHTML(cm) {
   const t = resumoDe(todos);
   const aberto = S.abertos.has(cm) || (S.filtro.q && lista.length);
   const categorias = [...new Set(lista.map((i) => i.categoria))];
-  return `<div class="room ${aberto ? "open" : ""}">
+  return `<div class="room ${aberto ? "open" : ""}" role="region" aria-label="${esc(cm)}">
     <button class="room-head" data-act="room" data-c="${esc(cm)}" aria-expanded="${!!aberto}">
       <span class="h2">${esc(cm)}</span>
-      <span class="row"><span class="muted small">${t.comprados}/${t.total}</span>${ICONES.chev}</span>
+      <span class="row"><span class="muted small" aria-label="${t.comprados} de ${t.total} comprados">${t.comprados}/${t.total}</span>${ICONES.chev}</span>
       ${barra(pct(t.comprados, t.total), "thin")}
     </button>
     <div class="room-body"><div><div class="room-inner">
@@ -127,7 +127,7 @@ export function telaEtapas() {
   const coluna = ([etapa, [titulo, descricao]]) => {
     const lista = S.itens.filter((i) => i.etapa === etapa).sort((a, b) => pendentesPrimeiro(a, b) || ORDEM_PRIORIDADE[a.prioridade] - ORDEM_PRIORIDADE[b.prioridade]);
     const feitos = lista.filter(comprado).length;
-    return `<div class="stage"><div><h3 class="h2 stage-title">${titulo}</h3><p class="muted small stage-desc">${descricao}</p></div>
+    return `<div class="stage"><div><h2 class="h2 stage-title">${titulo}</h2><p class="muted small stage-desc">${descricao}</p></div>
       ${progresso(`${feitos} de ${lista.length}`, feitos, lista.length, "thin")}
       <ul>${lista.map((i) => `<li class="${comprado(i) ? "done" : ""}"><button data-act="abrir" data-id="${i.id}"><span>${esc(i.nome)}</span><span class="muted small">${esc(i.comodo)}</span></button></li>`).join("")}</ul></div>`;
   };
@@ -230,8 +230,8 @@ function opcaoHTML(o) {
       <div class="opt-actions">
         ${linkExterno(o.url, "Abrir loja")}
         <button class="pill ${gosto ? "on" : ""}" data-act="curtir" data-id="${o.id}" aria-pressed="${gosto}">${ICONES.heart} ${gosto ? "Eu gosto" : "Gostei"}</button>
-        <button class="pill ${o.escolhida ? "on" : ""}" data-act="escolher" data-id="${o.id}">${o.escolhida ? "Escolhida" : "Escolher esta"}</button>
-        <button class="pill" data-act="apagarOpcao" data-id="${o.id}">Remover</button>
+        <button class="pill ${o.escolhida ? "on" : ""}" data-act="escolher" data-id="${o.id}" aria-pressed="${o.escolhida}">${o.escolhida ? "Escolhida" : "Escolher esta"}</button>
+        <button class="pill danger" data-act="apagarOpcao" data-id="${o.id}" aria-label="Remover opção ${esc(o.nome)}">Remover</button>
       </div>
     </div></div>`;
 }
@@ -259,7 +259,7 @@ function secaoComentarios(it) {
   return `<div>
     <span class="eyebrow">Conversa</span><h3 class="h2 sub-title comments-title">Comentários</h3>
     <div class="comments">${S.comentarios.filter((c) => c.item_id === it.id).map(comentario).join("")}</div>
-    <form id="form-comentario" class="row comment-form"><input class="input" name="texto" maxlength="2000" placeholder="Escreva um comentário" required><button class="btn sm" type="submit">Enviar</button></form>
+    <form id="form-comentario" class="row comment-form"><input class="input" name="texto" maxlength="2000" placeholder="Escreva um comentário" aria-label="Comentário" required><button class="btn sm" type="submit">Enviar</button></form>
   </div>`;
 }
 
@@ -275,7 +275,7 @@ export function painelItem() {
     <div class="sheet-body">
       <div><span class="eyebrow">${esc(it.comodo)} · ${esc(it.categoria)}</span><h2 class="display sheet-title">${esc(it.nome || "Novo item")}</h2>
         ${novo ? "" : historico(it)}</div>
-      ${novo ? "" : `<div><span class="eyebrow">Status</span><div class="status-pick">${Object.entries(STATUS).map(([k, l]) => `<button data-act="status" data-v="${k}" class="${it.status === k ? "on" : ""}">${l}</button>`).join("")}</div></div>`}
+      ${novo ? "" : `<div><span class="eyebrow">Status</span><div class="status-pick" role="group" aria-label="Status do item">${Object.entries(STATUS).map(([k, l]) => `<button type="button" data-act="status" data-v="${k}" class="${it.status === k ? "on" : ""}" aria-pressed="${it.status === k}">${l}</button>`).join("")}</div></div>`}
       ${formItem(it, novo)}
       ${novo ? "" : secaoOpcoes(it) + secaoComentarios(it)}
     </div>
@@ -288,7 +288,7 @@ export const telaLogin = () => `<div class="auth"><form class="auth-box view" id
     <label class="field">E-mail<input class="input" name="email" type="email" required autocomplete="email"></label>
     <label class="field">Senha<input class="input" name="senha" type="password" required autocomplete="current-password"></label>
     <button class="btn" type="submit">Entrar</button>
-    <p class="muted small" id="auth-msg"></p>
+    <p class="muted small" id="auth-msg" role="status" aria-live="polite"></p>
   </form></div>`;
 
 export const telaSemAcesso = () => `<div class="auth"><div class="auth-box view"><h1 class="display auth-title sm">Acesso restrito</h1><p class="muted">Esta conta não faz parte deste planejamento. O espaço é exclusivo para as duas pessoas cadastradas.</p><button class="btn ghost" data-act="sair">Sair</button></div></div>`;

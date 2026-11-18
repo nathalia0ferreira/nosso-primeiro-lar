@@ -19,30 +19,67 @@ const ROTAS = {
 };
 const rotaAtual = () => (location.hash.slice(1) in ROTAS ? location.hash.slice(1) : "inicio");
 
+let rotaAnterior = null;
 function render() {
   if (!S.session) return renderLogin();
   if (!S.souMembro) { $app.innerHTML = telaSemAcesso(); return; }
   const rota = rotaAtual();
-  $app.innerHTML = `<div class="shell">
+  const entrou = rota !== rotaAnterior; // anima só ao trocar de página, não a cada atualização
+  rotaAnterior = rota;
+  const painelAntes = document.querySelector(".sheet.show");
+  const rolagemPainel = painelAntes?.scrollTop ?? 0;
+  $app.innerHTML = `<a class="skip" href="#view">Pular para o conteúdo</a><div class="shell">
     <header class="top">
       <a class="brand" href="#inicio">Nosso Primeiro Lar</a>
-      <nav class="nav">${Object.entries(ROTAS).map(([k, [rotulo]]) => `<a href="#${k}" class="${k === rota ? "on" : ""}">${rotulo}</a>`).join("")}</nav>
+      <nav class="nav" aria-label="Principal">${Object.entries(ROTAS).map(([k, [rotulo]]) => `<a href="#${k}" class="${k === rota ? "on" : ""}"${k === rota ? ' aria-current="page"' : ""}>${rotulo}</a>`).join("")}</nav>
       <div class="who"><span>${esc(S.membros[meuId()] || "")}</span><button class="linkbtn" data-act="sair">Sair</button></div>
     </header>
-    <main class="view" id="view">${ROTAS[rota][1]()}</main>
+    <main class="view${entrou ? " enter" : ""}" id="view" tabindex="-1">${ROTAS[rota][1]()}</main>
   </div>${S.item ? painelItem() : ""}`;
-  if (S.item) requestAnimationFrame(() => document.querySelectorAll(".overlay,.sheet").forEach((e) => e.classList.add("show")));
+  document.title = `${ROTAS[rota][0]} · Nosso Primeiro Lar`;
+  if (!S.item) return;
+  const partes = document.querySelectorAll(".overlay,.sheet");
+  if (painelAntes) { // painel já estava aberto: mantém posição, sem animar de novo
+    partes.forEach((e) => e.classList.add("show", "fixo"));
+    document.querySelector(".sheet").scrollTop = rolagemPainel;
+  } else {
+    requestAnimationFrame(() => partes.forEach((e) => e.classList.add("show")));
+    document.querySelector(".sheet-close button")?.focus({ preventScroll: true });
+  }
 }
 
+/** Atualização vinda do outro usuário: espera quem estiver digitando terminar. */
+let renderPendente = false;
+let rascunho = false; // há texto digitado e ainda não salvo num formulário do painel
+const editando = () => rascunho || document.activeElement?.matches("form .input, #orc");
+function liberarRender() {
+  rascunho = false;
+  if (renderPendente) { renderPendente = false; render(); }
+}
+function renderRemoto() {
+  if (editando()) { renderPendente = true; return; }
+  render();
+}
+document.addEventListener("focusout", () => setTimeout(() => {
+  if (renderPendente && !editando()) { renderPendente = false; render(); }
+}));
+
 /* ---------- painel do item ---------- */
+let focoAntesDoPainel = null;
 function abrirPainel(id) {
+  if (!S.item) focoAntesDoPainel = document.activeElement;
   S.item = id; S.novaOpcao = false;
   document.body.style.overflow = "hidden";
   render();
 }
 function fecharPainel() {
   document.querySelectorAll(".overlay,.sheet").forEach((x) => x.classList.remove("show"));
-  setTimeout(() => { S.item = null; document.body.style.overflow = ""; render(); }, ANIMACAO_PAINEL_MS);
+  setTimeout(() => {
+    S.item = null; document.body.style.overflow = ""; rascunho = false; renderPendente = false; render();
+    // o DOM foi refeito: devolve o foco ao elemento equivalente ao que abriu o painel
+    const id = focoAntesDoPainel?.dataset?.id;
+    (id && document.querySelector(`[data-act="abrir"][data-id="${id}"]`))?.focus({ preventScroll: true });
+  }, ANIMACAO_PAINEL_MS);
 }
 
 /* ---------- ações sobre os dados ---------- */
@@ -242,6 +279,7 @@ $app.addEventListener("change", (e) => {
 });
 
 $app.addEventListener("input", (e) => {
+  if (e.target.closest(".sheet form")) rascunho = true;
   if (e.target.dataset.act !== "busca") return;
   S.filtro.q = e.target.value;
   document.getElementById("rooms").innerHTML = comodosHTML(); // sem render() para não perder o foco da busca
@@ -253,11 +291,14 @@ $app.addEventListener("submit", async (e) => {
   e.preventDefault();
   const botao = e.target.querySelector('[type="submit"]');
   botao.disabled = true;
-  try { await enviar(e.target); } catch { /* salvar() já avisou o usuário */ } finally { botao.disabled = false; }
+  try { await enviar(e.target); liberarRender(); } catch { /* salvar() já avisou o usuário */ } finally { botao.disabled = false; }
 });
 
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && S.item) fecharPainel(); });
-window.addEventListener("hashchange", () => { render(); scrollTo({ top: 0 }); });
+window.addEventListener("hashchange", () => {
+  if (location.hash === "#view") return; // link "pular para o conteúdo"
+  render(); scrollTo({ top: 0 });
+});
 
 /* ---------- sessão ---------- */
 function renderLogin() {
@@ -283,7 +324,7 @@ async function iniciar(session) {
   iniciado = true;
   const { data } = await sb.rpc("eh_membro");
   S.souMembro = !!data;
-  if (S.souMembro) { await carregar(); ouvirMudancas(render); }
+  if (S.souMembro) { await carregar(); ouvirMudancas(renderRemoto); }
   render();
 }
 // setTimeout: chamar o Supabase direto dentro deste listener pode travar o cliente
