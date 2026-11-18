@@ -2,6 +2,7 @@
 import { ETAPAS, ITEM_NOVO, ORDEM_PRIORIDADE, PRIORIDADES, QTD_PRIORITARIOS, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
 import { comprado, contagemRegressiva, maisBarata, prioritarios, resumo, totalOpcao } from "./calculos.js";
 import { brl, dataBR, esc, numeroParaCampo, pct } from "./formato.js";
+import { iconeDoItem } from "./icones.js";
 import { ICONES, barra, cabecalhoPagina, foto, linkExterno, progresso, segmentos } from "./ui.js";
 import { S, comodos, estimadoDe, fotoDe, itemPorId, meuId, nomeDe, opcoesDe } from "./estado.js";
 
@@ -13,7 +14,7 @@ const plural = (n, um, varios) => (n > 1 ? varios : um);
 function cardItem(it) {
   const est = estimadoDe(it);
   return `<button class="card ${comprado(it) ? "done" : ""}" data-act="abrir" data-id="${it.id}">
-    ${foto(fotoDe(it), it.nome)}
+    ${foto(fotoDe(it), it.nome, "photo", iconeDoItem(it))}
     <div class="body">
       <span class="name">${esc(it.nome)}</span>
       <span class="tag"><i class="dot ${comprado(it) ? "comprado" : it.prioridade}"></i>${esc(it.comodo)} · ${STATUS[it.status]}</span>
@@ -26,7 +27,7 @@ function linhaItem(it) {
   const nOpcoes = opcoesDe(it.id).length;
   return `<div class="check-row ${comprado(it) ? "done" : ""}">
     <input type="checkbox" class="cbox" data-act="check" data-id="${it.id}" ${comprado(it) ? "checked" : ""} aria-label="Marcar ${esc(it.nome)} como comprado">
-    ${foto(fotoDe(it), it.nome, "photo thumb")}
+    ${foto(fotoDe(it), it.nome, "photo thumb", iconeDoItem(it))}
     <button class="open" data-act="abrir" data-id="${it.id}">
       <div class="name">${esc(it.nome)}${it.quantidade > 1 ? ` <span class="muted small">× ${it.quantidade}</span>` : ""}</div>
       <span class="tag"><i class="dot ${it.prioridade}"></i>${PRIORIDADES[it.prioridade]} · ${STATUS[it.status]}${nOpcoes ? ` · ${nOpcoes} ${plural(nOpcoes, "opção", "opções")}` : ""}</span>
@@ -222,7 +223,7 @@ function opcaoHTML(o) {
   const gosto = o.curtidas.includes(meuId());
   const quemGostou = o.curtidas.map(nomeDe).join(" e ");
   return `<div class="opt ${o.escolhida ? "chosen" : ""}">
-    ${foto(o.imagem_url, o.nome)}
+    ${foto(o.imagem_url, o.nome, "photo", iconeDoItem(itemPorId(o.item_id) ?? o))}
     <div class="opt-body">
       <div class="between"><span class="eyebrow">${esc(o.loja || "Loja não informada")}${o.escolhida ? " · Escolhida" : ""}</span></div>
       <div class="opt-name">${esc(o.nome)}</div>
@@ -279,7 +280,7 @@ export function painelItem() {
   return `<div class="overlay" data-act="fechar"></div>
   <aside class="sheet" role="dialog" aria-modal="true" aria-label="${esc(it.nome || "Novo item")}">
     <div class="sheet-close"><button data-act="fechar" aria-label="Fechar">${ICONES.x}</button></div>
-    ${foto(novo ? null : fotoDe(it), it.nome || "+", "photo sheet-hero")}
+    ${foto(novo ? null : fotoDe(it), it.nome || "+", "photo sheet-hero", iconeDoItem(it))}
     <div class="sheet-body">
       <div><span class="eyebrow">${esc(it.comodo)} · ${esc(it.categoria)}</span><h2 class="display sheet-title">${esc(it.nome || "Novo item")}</h2>
         ${novo ? "" : historico(it)}</div>

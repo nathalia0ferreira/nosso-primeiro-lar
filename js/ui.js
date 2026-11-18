@@ -20,8 +20,8 @@ export function toast(msg, erro = false) {
 }
 
 /** Foto do produto; sem link válido (ou se a imagem falhar), mostra a inicial do nome. */
-export const foto = (url, rotulo, classe = "photo") =>
-  `<div class="${classe}">${urlOk(url) ? `<img src="${esc(url)}" alt="${esc(rotulo)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}<span class="ph" aria-hidden="true">${esc((rotulo || "?").trim()[0] || "?")}</span></div>`;
+export const foto = (url, rotulo, classe = "photo", icone = "") =>
+  `<div class="${classe}">${urlOk(url) ? `<img src="${esc(url)}" alt="${esc(rotulo)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}<span class="ph" aria-hidden="true">${icone || esc((rotulo || "?").trim()[0] || "?")}</span></div>`;
 
 export const linkExterno = (url, texto) =>
   urlOk(url) ? `<a class="pill" href="${esc(url)}" target="_blank" rel="noopener noreferrer nofollow">${texto} ${ICONES.ext}</a>` : "";

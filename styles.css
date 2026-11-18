@@ -284,3 +284,6 @@ textarea.input { min-height: 84px; resize: vertical; }
 .link-msg { margin: 0; }
 .badge { display: inline-block; margin-left: var(--s1); padding: 2px 8px; border-radius: 999px; font-size: 12px; background: var(--accent); color: var(--bg); white-space: nowrap; }
 .btn.achar { margin-top: var(--s4); justify-self: start; }
+.photo .ph .ico { width: 48px; height: 48px; color: var(--muted); display: block; }
+.photo.thumb .ph .ico { width: 26px; height: 26px; }
+.photo.sheet-hero .ph .ico { width: 88px; height: 88px; stroke-width: 1.1; }
