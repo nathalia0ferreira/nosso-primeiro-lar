@@ -256,8 +256,7 @@ function tabelaComparacao(opcoes) {
   ${melhor && !melhor.comFrete ? `<p class="small muted">Sem frete informado, a comparação usa só o preço do produto.</p>` : ""}`;
 }
 
-const buscaOutrasLojas = (it) => `<div class="busca-lojas"><span class="small muted">Procurar “${esc(it.nome)}” em:</span>
-    <div class="opt-actions">${BUSCAS.map(([loja, link]) => `<a class="pill" href="${esc(link(it.nome))}" target="_blank" rel="noopener noreferrer nofollow">${loja} ${ICONES.ext}</a>`).join("")}</div></div>`;
+const buscaOutrasLojas = (it) => `<div class="busca-lojas"><div class="opt-actions">${BUSCAS.map(([, link]) => `<a class="pill" href="${esc(link(it.nome))}" target="_blank" rel="noopener noreferrer nofollow">Achar mais barato ${ICONES.ext}</a>`).join("")}</div></div>`;
 
 function secaoOpcoes(it) {
   const opcoes = opcoesDe(it.id);
