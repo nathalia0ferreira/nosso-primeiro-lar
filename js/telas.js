@@ -3,7 +3,7 @@ import { ETAPAS, ITEM_NOVO, ORDEM_PRIORIDADE, PRIORIDADES, QTD_PRIORITARIOS, STA
 import { comprado, contagemRegressiva, maisBarata, prioritarios, resumo, totalOpcao } from "./calculos.js";
 import { brl, dataBR, esc, numeroParaCampo, pct } from "./formato.js";
 import { ICONES, barra, cabecalhoPagina, foto, linkExterno, progresso, segmentos } from "./ui.js";
-import { S, comodos, escolhidaDe, estimadoDe, fotoDe, itemPorId, meuId, nomeDe, opcoesDe } from "./estado.js";
+import { S, comodos, estimadoDe, fotoDe, itemPorId, meuId, nomeDe, opcoesDe } from "./estado.js";
 
 const resumoDe = (itens = S.itens) => resumo(itens, S.opcoes);
 const pendentesPrimeiro = (a, b) => comprado(a) - comprado(b);
@@ -192,12 +192,8 @@ function formItem(it, novo) {
     <label class="field">Quantidade<input class="input" name="quantidade" type="number" min="1" value="${it.quantidade}"></label>
     <label class="field">Prioridade${select("prioridade", PRIORIDADES, it.prioridade)}</label>
     <label class="field">Etapa${select("etapa", rotulosEtapa, it.etapa)}</label>
-    <label class="field">Preço estimado por unidade (R$)<input class="input" name="preco_estimado" inputmode="decimal" value="${numeroParaCampo(it.preco_estimado)}" placeholder="${!novo && escolhidaDe(it.id) ? "Usando a opção escolhida" : ""}"></label>
     <label class="field">Valor pago no total (R$)<input class="input" name="preco_pago" inputmode="decimal" value="${numeroParaCampo(it.preco_pago)}"></label>
-    <label class="field full">Link do produto<input class="input" name="link_produto" type="url" inputmode="url" placeholder="Cole o link da loja" autocomplete="off" value="${esc(it.link_produto)}">
-      <span class="small muted">A foto vem da página do produto. O botão Achar mais barato usa este link.</span></label>
-    <label class="field full">Descrição<textarea class="input" name="descricao">${esc(it.descricao)}</textarea></label>
-    <label class="field full">Nossa preferência<textarea class="input" name="preferencia" placeholder="Cor, tamanho, material, marca, o que cada um prefere…">${esc(it.preferencia)}</textarea></label>
+    <label class="field full">Link do produto<input class="input" name="link_produto" type="url" inputmode="url" placeholder="Cole o link da loja" autocomplete="off" value="${esc(it.link_produto)}"></label>
     <label class="field full">Observações<textarea class="input" name="observacoes">${esc(it.observacoes)}</textarea></label>
     <label class="row check-label small full muted"><input type="checkbox" class="cbox" name="esquecido" ${it.esquecido ? "checked" : ""}> Item pequeno que costuma ser esquecido</label>
     <div class="row full"><button class="btn" type="submit">${novo ? "Adicionar à lista" : "Salvar alterações"}</button>${novo ? "" : `<button class="btn danger" type="button" data-act="apagarItem">Remover item</button>`}</div>

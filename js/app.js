@@ -280,9 +280,8 @@ function dadosDoItem(d) {
   return {
     nome: d.nome.trim(), comodo: d.comodo.trim(), categoria: d.categoria.trim() || "Geral",
     quantidade: Math.max(1, parseInt(d.quantidade) || 1), prioridade: d.prioridade, etapa: d.etapa,
-    preco_estimado: lerNumero(d.preco_estimado), preco_pago: lerNumero(d.preco_pago),
-    link_produto: textoOuNulo(d.link_produto), descricao: textoOuNulo(d.descricao),
-    preferencia: textoOuNulo(d.preferencia), observacoes: textoOuNulo(d.observacoes), esquecido: !!d.esquecido,
+    preco_pago: lerNumero(d.preco_pago),
+    link_produto: textoOuNulo(d.link_produto), observacoes: textoOuNulo(d.observacoes), esquecido: !!d.esquecido,
   };
 }
 
