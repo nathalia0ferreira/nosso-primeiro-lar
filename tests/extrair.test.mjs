@@ -21,6 +21,16 @@ test("produto: sem JSON-LD usa Open Graph; preço em formato brasileiro", () => 
   assert.equal(p.nome, "Geladeira Frost Free"); assert.equal(p.preco, 3199); assert.equal(p.imagem, "https://img/g.jpg"); assert.equal(p.disponivel, null);
 });
 
+test("produto: página da Amazon (sem JSON-LD nem Open Graph)", () => {
+  const html = `<span id="productTitle" class="a-size-large">   Toalha de Rosto Velvet &amp; Macia   </span>
+    <img alt="" src="https://m.media-amazon.com/images/I/a._SX38_.jpg" data-old-hires="https://m.media-amazon.com/images/I/a._SL1500_.jpg" id="landingImage" data-a-dynamic-image="{&quot;https://m.media-amazon.com/images/I/a._SY355_.jpg&quot;:[355,355]}">
+    <script>{"priceAmount":22.94,"currencySymbol":"R$"}</script>`;
+  const p = extrairProduto(html);
+  assert.equal(p.nome, "Toalha de Rosto Velvet & Macia");
+  assert.equal(p.preco, 22.94); assert.equal(p.moeda, "BRL");
+  assert.equal(p.imagem, "https://m.media-amazon.com/images/I/a._SL1500_.jpg");
+});
+
 test("produto: imagem http e JSON quebrado são ignorados", () => {
   const p = extrairProduto(`<script type="application/ld+json">{quebrado</script><meta property="og:image" content="http://x/y.jpg">`);
   assert.equal(p.nome, null); assert.equal(p.imagem, null);

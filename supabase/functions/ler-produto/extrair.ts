@@ -73,18 +73,34 @@ const meta = (html: string, prop: string): string | null => {
   return tag?.match(/content=["']([^"']*)["']/i)?.[1] ?? null;
 };
 
-/** Dados do produto no HTML: primeiro JSON-LD (schema.org), depois as metatags Open Graph. */
+/**
+ * A Amazon não publica JSON-LD nem Open Graph: lê o título, o preço da oferta principal e a foto do HTML.
+ * shortcut: depende dos ids atuais da página da Amazon; se mudarem, cai em "preencha à mão".
+ */
+function paginaAmazon(html: string) {
+  const titulo = html.match(/id="productTitle"[^>]*>([^<]+)</)?.[1].replace(/\s+/g, " ");
+  const imagemTag = html.match(/<img[^>]+id="landingImage"[^>]*>/)?.[0] ?? "";
+  const imagem = imagemTag.match(/data-old-hires="(https:[^"]+)"/)?.[1] ?? decodificar(imagemTag).match(/"(https:\/\/[^"]+)"/)?.[1];
+  return {
+    nome: texto(titulo),
+    preco: numero(Number(html.match(/"priceAmount":([\d.]+)/)?.[1])),
+    imagem: linkHttps(imagem),
+  };
+}
+
+/** Dados do produto no HTML: JSON-LD (schema.org), depois Open Graph, depois o formato da Amazon. */
 export function extrairProduto(html: string): Produto {
   const p = produtosDoJsonLd(html)[0] ?? {};
   const ofertas = ([] as unknown[]).concat(p.offers ?? []) as Record<string, unknown>[];
   const oferta = ofertas.find((o) => numero(o?.price ?? o?.lowPrice) != null) ?? ofertas[0] ?? {};
   const disponibilidade = typeof oferta.availability === "string" ? /InStock|LimitedAvailability|PreOrder/i.test(oferta.availability) : null;
+  const amazon = paginaAmazon(html);
   return {
-    nome: texto(p.name) ?? texto(meta(html, "og:title")),
+    nome: texto(p.name) ?? texto(meta(html, "og:title")) ?? amazon.nome,
     marca: texto(p.brand),
-    preco: numero(oferta.price ?? oferta.lowPrice) ?? numero(meta(html, "product:price:amount")),
-    moeda: texto(oferta.priceCurrency) ?? texto(meta(html, "product:price:currency")),
-    imagem: linkHttps(p.image) ?? linkHttps(meta(html, "og:image")),
+    preco: numero(oferta.price ?? oferta.lowPrice) ?? numero(meta(html, "product:price:amount")) ?? amazon.preco,
+    moeda: texto(oferta.priceCurrency) ?? texto(meta(html, "product:price:currency")) ?? (amazon.preco != null ? "BRL" : null),
+    imagem: linkHttps(p.image) ?? linkHttps(meta(html, "og:image")) ?? amazon.imagem,
     gtin: texto(p.gtin13 ?? p.gtin ?? p.gtin14 ?? p.gtin12 ?? p.gtin8),
     sku: texto(p.sku),
     modelo: texto(p.model ?? p.mpn),
