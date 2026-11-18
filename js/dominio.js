@@ -20,7 +20,11 @@ export const DATA_MUDANCA_PADRAO = "2029-02-01";
 export const QTD_PRIORITARIOS = 8;
 
 /** Atalhos de busca em outras lojas (só abrem a busca da loja; nenhum preço é inventado). */
+/** achar.promo: com um link, procura o mesmo produto mais barato em outras lojas (o formato que o próprio site usa). */
+export const acharPromo = (link) => `https://achar.promo/chat/${crypto.randomUUID()}?url=${encodeURIComponent(link)}`;
+
 export const BUSCAS = [
+  ["achar.promo", (q) => `https://achar.promo/chat/prompt/${crypto.randomUUID()}/?q=${encodeURIComponent(q)}`],
   ["Google Shopping", (q) => `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(q)}`],
   ["JáCotei", (q) => `https://jacotei.com.br/search?q=${encodeURIComponent(q)}`],
   ["Buscapé", (q) => `https://www.buscape.com.br/search?q=${encodeURIComponent(q)}`],

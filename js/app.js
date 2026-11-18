@@ -2,6 +2,7 @@
 import { statusAoDesmarcar } from "./calculos.js";
 import { esc, lerNumero, numeroParaCampo, textoOuNulo, urlOk } from "./formato.js";
 import { lerForm, toast } from "./ui.js";
+import { acharPromo } from "./dominio.js";
 import { S, carregar, escolhidaDe, itemPorId, meuId, opcoesDe, ouvirMudancas, salvar, sb } from "./estado.js";
 import { comodosHTML, painelItem, telaEsquecidos, telaEtapas, telaFinancas, telaInicio, telaLista, telaLogin, telaSemAcesso } from "./telas.js";
 
@@ -219,6 +220,17 @@ async function colarLink() {
   }
 }
 
+/** Abre o achar.promo com o link colado, para procurar o mesmo produto mais barato. */
+function acharMaisBarato() {
+  const campo = document.getElementById("op-url");
+  const url = campo.value.trim();
+  if (!/^https:\/\//i.test(url)) {
+    document.getElementById("link-msg").textContent = "Cole o link do produto primeiro (começando com https://).";
+    return campo.focus();
+  }
+  window.open(acharPromo(url), "_blank", "noopener");
+}
+
 async function lerLink() {
   const form = document.getElementById("form-opcao");
   const campo = (n) => form.elements[n];
@@ -318,6 +330,7 @@ const ACOES = {
   apagarComentario: (el) => apagarComentario(el.dataset.id),
   colarLink,
   lerLink,
+  acharMaisBarato,
 };
 
 $app.addEventListener("click", async (e) => {
