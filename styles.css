@@ -220,5 +220,36 @@ textarea.input { min-height: 84px; resize: vertical; }
 #toast.err { background: var(--warn); }
 
 .empty { padding: 40px 0; color: var(--muted); }
+.empty.padded { padding: 24px; }
+
+/* Ajustes pontuais (antes eram estilos inline) */
+.section-near { margin-top: 40px; }
+.section-close { margin-top: 32px; }
+.self-start { justify-self: start; }
+.nowrap { white-space: nowrap; }
+.pre { white-space: pre-wrap; }
+.price.left { text-align: left; }
+.hero-progress { flex: 1; min-width: 220px; }
+.progress-box { max-width: 420px; }
+.rooms { margin-top: 24px; }
+.fin-link { grid-template-columns: 1fr auto; text-decoration: none; }
+.stage-title { font-size: 22px; }
+.stage-desc { margin: 6px 0 0; }
+.budget-form { max-width: 560px; align-items: end; }
+.compare-bars { display: grid; gap: 14px; margin-top: 28px; max-width: 720px; }
+.compare-bars .bar { margin-top: 6px; }
+.alert { color: var(--warn); margin-top: 18px; }
+.meta { margin: 10px 0 0; }
+.sub-title { font-size: 24px; }
+.comments-title { margin-bottom: 14px; }
+.comment-text { margin: 4px 0 0; white-space: pre-wrap; }
+.comment-form { margin-top: 14px; flex-wrap: nowrap; }
+.option-form, .options { margin-top: 16px; }
+.compare-wrap { margin-top: 18px; }
+.status-pick { margin-top: 10px; }
+.opt-name { font-weight: 500; overflow-wrap: anywhere; }
+.sheet-title { font-size: clamp(34px, 6vw, 52px); margin-top: 8px; }
+.auth-title { font-size: 52px; margin-top: 10px; }
+.auth-title.sm { font-size: 44px; margin-top: 0; }
 .callout { border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; background: var(--surface); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

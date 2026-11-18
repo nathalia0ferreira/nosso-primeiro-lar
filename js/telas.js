@@ -17,7 +17,7 @@ function cardItem(it) {
     <div class="body">
       <span class="name">${esc(it.nome)}</span>
       <span class="tag"><i class="dot ${comprado(it) ? "comprado" : it.prioridade}"></i>${esc(it.comodo)} · ${STATUS[it.status]}</span>
-      ${est != null ? `<span class="price" style="text-align:left">${brl(est)}</span>` : ""}
+      ${est != null ? `<span class="price left">${brl(est)}</span>` : ""}
     </div></button>`;
 }
 
@@ -49,7 +49,7 @@ export function telaInicio() {
       <div class="hero-meta">
         <div><div class="count">${c.dias.toLocaleString("pt-BR")}</div><span class="muted small">dias até a mudança</span></div>
         <div><div class="count">${c.meses}</div><span class="muted small">meses para planejar</span></div>
-        <div style="flex:1;min-width:220px">${progresso("Progresso das compras", t.comprados, t.total)}</div>
+        <div class="hero-progress">${progresso("Progresso das compras", t.comprados, t.total)}</div>
       </div>
     </section>
     <section class="section">
@@ -67,7 +67,7 @@ export function telaInicio() {
       <div class="section-head"><div><span class="eyebrow">Por cômodo</span><h2 class="h2">Andamento</h2></div></div>
       <div class="fin">${comodos().map((cm) => {
         const tc = resumoDe(S.itens.filter((i) => i.comodo === cm));
-        return `<a class="fin-row" style="grid-template-columns:1fr auto;text-decoration:none" href="#lista" data-act="irComodo" data-c="${esc(cm)}"><span>${esc(cm)}</span><span class="muted small">${tc.comprados} de ${tc.total}</span>${barra(pct(tc.comprados, tc.total), "thin")}</a>`;
+        return `<a class="fin-row fin-link" href="#lista" data-act="irComodo" data-c="${esc(cm)}"><span>${esc(cm)}</span><span class="muted small">${tc.comprados} de ${tc.total}</span>${barra(pct(tc.comprados, tc.total), "thin")}</a>`;
       }).join("")}</div>
     </section>`;
 }
@@ -108,7 +108,7 @@ export function telaLista() {
       ${segmentos([["todas", "Todas"], ["essencial", "Essenciais"], ["importante", "Importantes"], ["complementar", "Complementares"]], f.prio, 'data-act="filtro" data-k="prio"')}
       <button class="btn sm" data-act="novo">Adicionar item</button>
     </div>
-    <div style="margin-top:24px" id="rooms">${comodosHTML()}</div>`;
+    <div class="rooms" id="rooms">${comodosHTML()}</div>`;
 }
 
 /* ---------- Esquecidos ---------- */
@@ -117,9 +117,9 @@ export function telaEsquecidos() {
   const feitos = lista.filter(comprado).length;
   return `<section class="hero page">
     ${cabecalhoPagina("Os pequenos essenciais", "O que sempre esquecem", "Não adianta ter geladeira sem ter talheres. Estes são os itens pequenos que fazem falta já na primeira noite. Marque qualquer item como “esquecível” no detalhe dele para que apareça aqui.")}
-    <div style="max-width:420px">${progresso(`${feitos} de ${lista.length} garantidos`, feitos, lista.length)}</div>
+    <div class="progress-box">${progresso(`${feitos} de ${lista.length} garantidos`, feitos, lista.length)}</div>
   </section>
-  <section class="section" style="margin-top:40px"><div class="check-list">${lista.map(linhaItem).join("") || `<p class="empty" style="padding:24px">Nenhum item marcado.</p>`}</div></section>`;
+  <section class="section section-near"><div class="check-list">${lista.map(linhaItem).join("") || `<p class="empty padded">Nenhum item marcado.</p>`}</div></section>`;
 }
 
 /* ---------- Etapas ---------- */
@@ -127,12 +127,12 @@ export function telaEtapas() {
   const coluna = ([etapa, [titulo, descricao]]) => {
     const lista = S.itens.filter((i) => i.etapa === etapa).sort((a, b) => pendentesPrimeiro(a, b) || ORDEM_PRIORIDADE[a.prioridade] - ORDEM_PRIORIDADE[b.prioridade]);
     const feitos = lista.filter(comprado).length;
-    return `<div class="stage"><div><h3 class="h2" style="font-size:22px">${titulo}</h3><p class="muted small" style="margin:6px 0 0">${descricao}</p></div>
+    return `<div class="stage"><div><h3 class="h2 stage-title">${titulo}</h3><p class="muted small stage-desc">${descricao}</p></div>
       ${progresso(`${feitos} de ${lista.length}`, feitos, lista.length, "thin")}
       <ul>${lista.map((i) => `<li class="${comprado(i) ? "done" : ""}"><button data-act="abrir" data-id="${i.id}"><span>${esc(i.nome)}</span><span class="muted small">${esc(i.comodo)}</span></button></li>`).join("")}</ul></div>`;
   };
   return `<section class="hero page">${cabecalhoPagina("Sem pressa", "Compras por etapa", "A ideia não é comprar tudo agora: é saber o que pesquisar, acompanhar preços e aproveitar boas oportunidades até a mudança.")}</section>
-    <div class="stages section" style="margin-top:32px">${Object.entries(ETAPAS).map(coluna).join("")}</div>`;
+    <div class="stages section section-close">${Object.entries(ETAPAS).map(coluna).join("")}</div>`;
 }
 
 /* ---------- Finanças ---------- */
@@ -146,10 +146,10 @@ export function telaFinancas() {
   const maiorValor = Math.max(orc || 0, t.estTotal, t.gasto, 1);
   const comOrcamento = (f) => (orc != null ? brl(f(orc)) : "—");
   return `<section class="hero page">${cabecalhoPagina("Planejamento financeiro", "Quanto custa o lar")}</section>
-    <section class="section" style="margin-top:32px">
-      <div class="fields" style="max-width:560px;align-items:end">
+    <section class="section section-close">
+      <div class="fields budget-form">
         <label class="field">Orçamento total planejado (R$)<input class="input" inputmode="decimal" id="orc" value="${numeroParaCampo(orc)}" placeholder="Ex.: 40000"></label>
-        <button class="btn ghost" data-act="salvarOrc" style="justify-self:start">Salvar orçamento</button>
+        <button class="btn ghost self-start" data-act="salvarOrc">Salvar orçamento</button>
       </div>
     </section>
     <section class="section">
@@ -157,10 +157,10 @@ export function telaFinancas() {
         ${estatistica("Orçamento", brl(orc))}${estatistica("Estimado", brl(t.estTotal))}${estatistica("Gasto real", brl(t.gasto))}
         ${estatistica("Restante a comprar", brl(t.reservar))}${estatistica("Saldo do orçamento", comOrcamento((o) => o - t.gasto))}${estatistica("Folga prevista", comOrcamento((o) => o - t.gasto - t.reservar))}
       </div>
-      <div style="display:grid;gap:14px;margin-top:28px;max-width:720px">
-        ${[["Orçamento", orc || 0], ["Estimado", t.estTotal], ["Gasto real", t.gasto]].map(([l, v]) => `<div><div class="between small"><span class="muted">${l}</span><span>${brl(v)}</span></div><div style="margin-top:6px">${barra(pct(v, maiorValor))}</div></div>`).join("")}
+      <div class="compare-bars">
+        ${[["Orçamento", orc || 0], ["Estimado", t.estTotal], ["Gasto real", t.gasto]].map(([l, v]) => `<div><div class="between small"><span class="muted">${l}</span><span>${brl(v)}</span></div>${barra(pct(v, maiorValor))}</div>`).join("")}
       </div>
-      ${orc != null && t.gasto + t.reservar > orc ? `<p class="small" style="color:var(--warn);margin-top:18px">A previsão atual passa o orçamento em ${brl(t.gasto + t.reservar - orc)}.</p>` : ""}
+      ${orc != null && t.gasto + t.reservar > orc ? `<p class="small alert">A previsão atual passa o orçamento em ${brl(t.gasto + t.reservar - orc)}.</p>` : ""}
     </section>
     <section class="section">
       <div class="section-head"><div><span class="eyebrow">Detalhamento</span><h2 class="h2">Gastos por ${chave === "comodo" ? "cômodo" : "categoria"}</h2></div>
@@ -180,7 +180,7 @@ const select = (nome, opcoes, valor) =>
 
 function historico(it) {
   const por = (uid, semAutor) => (uid ? `por ${esc(nomeDe(uid))} ` : semAutor);
-  return `<p class="muted small" style="margin:10px 0 0">Adicionado ${por(it.criado_por, "na lista inicial ")}em ${dataBR(it.criado_em)} · Atualizado ${por(it.atualizado_por, "")}em ${dataBR(it.atualizado_em)}</p>`;
+  return `<p class="muted small meta">Adicionado ${por(it.criado_por, "na lista inicial ")}em ${dataBR(it.criado_em)} · Atualizado ${por(it.atualizado_por, "")}em ${dataBR(it.atualizado_em)}</p>`;
 }
 
 function formItem(it, novo) {
@@ -198,12 +198,12 @@ function formItem(it, novo) {
     <label class="field full">Descrição<textarea class="input" name="descricao">${esc(it.descricao)}</textarea></label>
     <label class="field full">Nossa preferência<textarea class="input" name="preferencia" placeholder="Cor, tamanho, material, marca, o que cada um prefere…">${esc(it.preferencia)}</textarea></label>
     <label class="field full">Observações<textarea class="input" name="observacoes">${esc(it.observacoes)}</textarea></label>
-    <label class="row small full" style="color:var(--muted)"><input type="checkbox" class="cbox" name="esquecido" ${it.esquecido ? "checked" : ""}> Item pequeno que costuma ser esquecido</label>
+    <label class="row small full muted"><input type="checkbox" class="cbox" name="esquecido" ${it.esquecido ? "checked" : ""}> Item pequeno que costuma ser esquecido</label>
     <div class="row full"><button class="btn" type="submit">${novo ? "Adicionar à lista" : "Salvar alterações"}</button>${novo ? "" : `<button class="btn danger" type="button" data-act="apagarItem">Remover item</button>`}</div>
   </form>`;
 }
 
-const formOpcao = () => `<form id="form-opcao" class="fields callout" style="margin-top:16px">
+const formOpcao = () => `<form id="form-opcao" class="fields callout option-form">
     <label class="field">Produto / modelo<input class="input" name="nome" required></label>
     <label class="field">Loja<input class="input" name="loja"></label>
     <label class="field">Preço (R$)<input class="input" name="preco" inputmode="decimal"></label>
@@ -221,10 +221,10 @@ function opcaoHTML(o) {
     ${foto(o.imagem_url, o.nome)}
     <div class="opt-body">
       <div class="between"><span class="eyebrow">${esc(o.loja || "Loja não informada")}${o.escolhida ? " · Escolhida" : ""}</span></div>
-      <div style="font-weight:500;overflow-wrap:anywhere">${esc(o.nome)}</div>
+      <div class="opt-name">${esc(o.nome)}</div>
       <div class="opt-price">${brl(o.preco)}</div>
-      ${o.caracteristicas ? `<div class="small muted" style="white-space:pre-wrap">${esc(o.caracteristicas)}</div>` : ""}
-      ${o.observacoes ? `<div class="small" style="white-space:pre-wrap">${esc(o.observacoes)}</div>` : ""}
+      ${o.caracteristicas ? `<div class="small muted pre">${esc(o.caracteristicas)}</div>` : ""}
+      ${o.observacoes ? `<div class="small pre">${esc(o.observacoes)}</div>` : ""}
       ${quemGostou ? `<div class="small muted">Gostou: ${esc(quemGostou)}</div>` : ""}
       <div class="small muted">Adicionada por ${esc(nomeDe(o.criado_por))} em ${dataBR(o.criado_em)}</div>
       <div class="opt-actions">
@@ -239,27 +239,27 @@ function opcaoHTML(o) {
 function tabelaComparacao(opcoes) {
   const menorPreco = Math.min(...opcoes.filter((o) => o.preco != null).map((o) => o.preco));
   const preferencia = (o) => (o.escolhida ? "Escolhida" : o.curtidas.length ? `${o.curtidas.length} ${plural(o.curtidas.length, "curtida", "curtidas")}` : "—");
-  return `<div class="compare-wrap" style="margin-top:18px"><table class="compare"><thead><tr><th>Produto</th><th>Loja</th><th>Preço</th><th>Preferência</th></tr></thead><tbody>
-    ${opcoes.map((o) => `<tr><td>${esc(o.nome)}</td><td>${esc(o.loja || "—")}</td><td style="white-space:nowrap">${brl(o.preco)}${o.preco === menorPreco ? ' <span class="muted small">menor</span>' : ""}</td><td>${preferencia(o)}</td></tr>`).join("")}
+  return `<div class="compare-wrap"><table class="compare"><thead><tr><th>Produto</th><th>Loja</th><th>Preço</th><th>Preferência</th></tr></thead><tbody>
+    ${opcoes.map((o) => `<tr><td>${esc(o.nome)}</td><td>${esc(o.loja || "—")}</td><td class="nowrap">${brl(o.preco)}${o.preco === menorPreco ? ' <span class="muted small">menor</span>' : ""}</td><td>${preferencia(o)}</td></tr>`).join("")}
   </tbody></table></div>`;
 }
 
 function secaoOpcoes(it) {
   const opcoes = opcoesDe(it.id);
   return `<div>
-    <div class="between"><div><span class="eyebrow">Comparação</span><h3 class="h2" style="font-size:24px">Opções encontradas</h3></div><button class="btn sm ghost" data-act="toggleOpcao">${S.novaOpcao ? "Cancelar" : "Adicionar opção"}</button></div>
+    <div class="between"><div><span class="eyebrow">Comparação</span><h3 class="h2 sub-title">Opções encontradas</h3></div><button class="btn sm ghost" data-act="toggleOpcao">${S.novaOpcao ? "Cancelar" : "Adicionar opção"}</button></div>
     ${S.novaOpcao ? formOpcao() : ""}
-    <div class="options" style="margin-top:16px">${opcoes.map(opcaoHTML).join("") || `<p class="muted small">Nenhuma opção ainda. Adicionem links de lojas diferentes para comparar.</p>`}</div>
+    <div class="options">${opcoes.map(opcaoHTML).join("") || `<p class="muted small">Nenhuma opção ainda. Adicionem links de lojas diferentes para comparar.</p>`}</div>
     ${opcoes.length > 1 ? tabelaComparacao(opcoes) : ""}
   </div>`;
 }
 
 function secaoComentarios(it) {
-  const comentario = (c) => `<div class="comment"><div class="between small"><span>${esc(nomeDe(c.autor))}</span><span class="muted">${dataBR(c.criado_em)}${c.autor === meuId() ? ` <button class="linkbtn" data-act="apagarComentario" data-id="${c.id}">apagar</button>` : ""}</span></div><p style="margin:4px 0 0;white-space:pre-wrap">${esc(c.texto)}</p></div>`;
+  const comentario = (c) => `<div class="comment"><div class="between small"><span>${esc(nomeDe(c.autor))}</span><span class="muted">${dataBR(c.criado_em)}${c.autor === meuId() ? ` <button class="linkbtn" data-act="apagarComentario" data-id="${c.id}">apagar</button>` : ""}</span></div><p class="comment-text">${esc(c.texto)}</p></div>`;
   return `<div>
-    <span class="eyebrow">Conversa</span><h3 class="h2" style="font-size:24px;margin-bottom:14px">Comentários</h3>
+    <span class="eyebrow">Conversa</span><h3 class="h2 sub-title comments-title">Comentários</h3>
     <div class="comments">${S.comentarios.filter((c) => c.item_id === it.id).map(comentario).join("")}</div>
-    <form id="form-comentario" class="row" style="margin-top:14px;flex-wrap:nowrap"><input class="input" name="texto" maxlength="2000" placeholder="Escreva um comentário" required><button class="btn sm" type="submit">Enviar</button></form>
+    <form id="form-comentario" class="row comment-form"><input class="input" name="texto" maxlength="2000" placeholder="Escreva um comentário" required><button class="btn sm" type="submit">Enviar</button></form>
   </div>`;
 }
 
@@ -273,9 +273,9 @@ export function painelItem() {
     <div class="sheet-close"><button data-act="fechar" aria-label="Fechar">${ICONES.x}</button></div>
     ${foto(novo ? null : fotoDe(it), it.nome || "+", "photo sheet-hero")}
     <div class="sheet-body">
-      <div><span class="eyebrow">${esc(it.comodo)} · ${esc(it.categoria)}</span><h2 class="display" style="font-size:clamp(34px,6vw,52px);margin-top:8px">${esc(it.nome || "Novo item")}</h2>
+      <div><span class="eyebrow">${esc(it.comodo)} · ${esc(it.categoria)}</span><h2 class="display sheet-title">${esc(it.nome || "Novo item")}</h2>
         ${novo ? "" : historico(it)}</div>
-      ${novo ? "" : `<div><span class="eyebrow">Status</span><div class="status-pick" style="margin-top:10px">${Object.entries(STATUS).map(([k, l]) => `<button data-act="status" data-v="${k}" class="${it.status === k ? "on" : ""}">${l}</button>`).join("")}</div></div>`}
+      ${novo ? "" : `<div><span class="eyebrow">Status</span><div class="status-pick">${Object.entries(STATUS).map(([k, l]) => `<button data-act="status" data-v="${k}" class="${it.status === k ? "on" : ""}">${l}</button>`).join("")}</div></div>`}
       ${formItem(it, novo)}
       ${novo ? "" : secaoOpcoes(it) + secaoComentarios(it)}
     </div>
@@ -284,11 +284,11 @@ export function painelItem() {
 
 /* ---------- Acesso ---------- */
 export const telaLogin = () => `<div class="auth"><form class="auth-box view" id="auth">
-    <div><span class="eyebrow">Espaço privado</span><h1 class="display" style="font-size:52px;margin-top:10px">Nosso Primeiro Lar</h1><p class="muted">Planejamento da nossa mudança em fevereiro de 2029.</p></div>
+    <div><span class="eyebrow">Espaço privado</span><h1 class="display auth-title">Nosso Primeiro Lar</h1><p class="muted">Planejamento da nossa mudança em fevereiro de 2029.</p></div>
     <label class="field">E-mail<input class="input" name="email" type="email" required autocomplete="email"></label>
     <label class="field">Senha<input class="input" name="senha" type="password" required autocomplete="current-password"></label>
     <button class="btn" type="submit">Entrar</button>
     <p class="muted small" id="auth-msg"></p>
   </form></div>`;
 
-export const telaSemAcesso = () => `<div class="auth"><div class="auth-box view"><h1 class="display" style="font-size:44px">Acesso restrito</h1><p class="muted">Esta conta não faz parte deste planejamento. O espaço é exclusivo para as duas pessoas cadastradas.</p><button class="btn ghost" data-act="sair">Sair</button></div></div>`;
+export const telaSemAcesso = () => `<div class="auth"><div class="auth-box view"><h1 class="display auth-title sm">Acesso restrito</h1><p class="muted">Esta conta não faz parte deste planejamento. O espaço é exclusivo para as duas pessoas cadastradas.</p><button class="btn ghost" data-act="sair">Sair</button></div></div>`;

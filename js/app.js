@@ -40,11 +40,9 @@ function abrirPainel(id) {
   document.body.style.overflow = "hidden";
   render();
 }
-function fecharPainel(animar = true) {
-  const fechar = () => { S.item = null; document.body.style.overflow = ""; render(); };
-  if (!animar) return fechar();
+function fecharPainel() {
   document.querySelectorAll(".overlay,.sheet").forEach((x) => x.classList.remove("show"));
-  setTimeout(fechar, ANIMACAO_PAINEL_MS);
+  setTimeout(() => { S.item = null; document.body.style.overflow = ""; render(); }, ANIMACAO_PAINEL_MS);
 }
 
 /* ---------- ações sobre os dados ---------- */
@@ -70,53 +68,97 @@ async function marcarComprado(id, marcado) {
   await atualizarItem(id, valores, marcado ? `${it.nome} marcado como comprado` : `${it.nome} voltou para a lista`);
 }
 
-async function salvarOrcamento() {
+/**
+ * Mostra a mudança na hora e só depois grava. `aplicar` altera o estado e devolve
+ * a função que desfaz; se o banco recusar, desfaz (salvar() já avisou o usuário).
+ */
+// shortcut: o desfazer restaura o estado anterior inteiro; se o outro membro mudar algo nesse meio-tempo, a recarga em tempo real corrige
+async function otimista(aplicar, gravar, mensagem) {
+  const desfazer = aplicar();
+  render();
+  try {
+    await gravar();
+    if (mensagem) toast(mensagem);
+  } catch {
+    desfazer();
+    render();
+  }
+}
+
+function salvarOrcamento() {
   const valor = lerNumero(document.getElementById("orc").value);
-  const { error } = await sb.from("config").update({ orcamento_total: valor }).eq("id", 1);
-  if (error) return toast("Não foi possível salvar o orçamento.", true);
-  S.config.orcamento_total = valor; render(); toast("Orçamento salvo");
+  const antes = S.config.orcamento_total;
+  return otimista(
+    () => { S.config.orcamento_total = valor; return () => (S.config.orcamento_total = antes); },
+    () => salvar("config", "update", { orcamento_total: valor }, 1),
+    "Orçamento salvo",
+  );
 }
 
-async function apagarItem(it) {
+function apagarItem(it) {
   if (!confirm(`Remover “${it.nome}” da lista? As opções e comentários dele também serão apagados.`)) return;
-  await salvar("itens", "delete", null, it.id);
-  S.itens = S.itens.filter((i) => i.id !== it.id);
-  fecharPainel(false);
-  toast("Item removido");
+  const antes = S.itens;
+  return otimista(
+    () => {
+      S.itens = S.itens.filter((i) => i.id !== it.id);
+      S.item = null; document.body.style.overflow = "";
+      return () => { S.itens = antes; S.item = it.id; document.body.style.overflow = "hidden"; };
+    },
+    () => salvar("itens", "delete", null, it.id),
+    "Item removido",
+  );
 }
 
-async function alternarCurtida(opcaoId) {
+function alternarCurtida(opcaoId) {
   const o = S.opcoes.find((x) => x.id === opcaoId);
   const eu = meuId();
-  const curtidas = o.curtidas.includes(eu) ? o.curtidas.filter((u) => u !== eu) : [...o.curtidas, eu];
-  Object.assign(o, await salvar("opcoes", "update", { curtidas }, opcaoId));
-  render();
+  const antes = o.curtidas;
+  const curtidas = antes.includes(eu) ? antes.filter((u) => u !== eu) : [...antes, eu];
+  return otimista(
+    () => { o.curtidas = curtidas; return () => (o.curtidas = antes); },
+    () => salvar("opcoes", "update", { curtidas }, opcaoId),
+  );
 }
 
 /** Só uma opção escolhida por item; escolher também avança o status do item. */
-async function alternarEscolha(opcaoId, it) {
+function alternarEscolha(opcaoId, it) {
   const o = S.opcoes.find((x) => x.id === opcaoId);
   const marcar = !o.escolhida;
-  for (const outra of opcoesDe(o.item_id).filter((x) => x.escolhida && x.id !== opcaoId)) {
-    Object.assign(outra, await salvar("opcoes", "update", { escolhida: false }, outra.id));
-  }
-  Object.assign(o, await salvar("opcoes", "update", { escolhida: marcar }, opcaoId));
-  if (marcar && ["nao_iniciado", "pesquisando"].includes(it.status)) await atualizarItem(it.id, { status: "escolhido" });
-  render();
-  toast(marcar ? "Opção escolhida" : "Escolha desfeita");
+  const outras = opcoesDe(o.item_id).filter((x) => x.escolhida && x.id !== opcaoId);
+  const novoStatus = marcar && ["nao_iniciado", "pesquisando"].includes(it.status) ? "escolhido" : null;
+  const statusAntes = it.status;
+  return otimista(
+    () => {
+      outras.forEach((x) => (x.escolhida = false));
+      o.escolhida = marcar;
+      if (novoStatus) it.status = novoStatus;
+      return () => { outras.forEach((x) => (x.escolhida = true)); o.escolhida = !marcar; it.status = statusAntes; };
+    },
+    async () => {
+      for (const outra of outras) await salvar("opcoes", "update", { escolhida: false }, outra.id);
+      await salvar("opcoes", "update", { escolhida: marcar }, opcaoId);
+      if (novoStatus) Object.assign(it, await salvar("itens", "update", { status: novoStatus }, it.id));
+    },
+    marcar ? "Opção escolhida" : "Escolha desfeita",
+  );
 }
 
-async function apagarOpcao(opcaoId) {
+function apagarOpcao(opcaoId) {
   if (!confirm("Remover esta opção?")) return;
-  await salvar("opcoes", "delete", null, opcaoId);
-  S.opcoes = S.opcoes.filter((o) => o.id !== opcaoId);
-  render(); toast("Opção removida");
+  const antes = S.opcoes;
+  return otimista(
+    () => { S.opcoes = S.opcoes.filter((o) => o.id !== opcaoId); return () => (S.opcoes = antes); },
+    () => salvar("opcoes", "delete", null, opcaoId),
+    "Opção removida",
+  );
 }
 
-async function apagarComentario(comentarioId) {
-  await salvar("comentarios", "delete", null, comentarioId);
-  S.comentarios = S.comentarios.filter((c) => c.id !== comentarioId);
-  render();
+function apagarComentario(comentarioId) {
+  const antes = S.comentarios;
+  return otimista(
+    () => { S.comentarios = S.comentarios.filter((c) => c.id !== comentarioId); return () => (S.comentarios = antes); },
+    () => salvar("comentarios", "delete", null, comentarioId),
+  );
 }
 
 function alternarComodo(el) {
