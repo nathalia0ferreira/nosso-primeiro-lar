@@ -1,12 +1,13 @@
 // Geração do HTML de cada tela. Só lê o estado; ações ficam em app.js.
-import { ETAPAS, ITEM_NOVO, ORDEM_PRIORIDADE, PRIORIDADES, QTD_PRIORITARIOS, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
+import { ETAPAS, ITEM_NOVO, ehVistoria, ORDEM_PRIORIDADE, PRIORIDADES, QTD_PRIORITARIOS, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
 import { comprado, contagemRegressiva, maisBarata, prioritarios, resumo, totalOpcao } from "./calculos.js";
 import { brl, dataBR, esc, numeroParaCampo, pct } from "./formato.js";
 import { iconeDoItem } from "./icones.js";
 import { ICONES, barra, cabecalhoPagina, foto, linkExterno, progresso, segmentos } from "./ui.js";
 import { S, comodos, estimadoDe, fotoDe, itemPorId, meuId, nomeDe, opcoesDe } from "./estado.js";
 
-const resumoDe = (itens = S.itens) => resumo(itens, S.opcoes);
+const compras = () => S.itens.filter((i) => !ehVistoria(i));
+const resumoDe = (itens = compras()) => resumo(itens, S.opcoes);
 const pendentesPrimeiro = (a, b) => comprado(a) - comprado(b);
 const plural = (n, um, varios) => (n > 1 ? varios : um);
 
@@ -26,11 +27,11 @@ function linhaItem(it) {
   const valor = comprado(it) && it.preco_pago != null ? it.preco_pago : estimadoDe(it);
   const nOpcoes = opcoesDe(it.id).length;
   return `<div class="check-row ${comprado(it) ? "done" : ""}">
-    <input type="checkbox" class="cbox" data-act="check" data-id="${it.id}" ${comprado(it) ? "checked" : ""} aria-label="Marcar ${esc(it.nome)} como comprado">
+    <input type="checkbox" class="cbox" data-act="check" data-id="${it.id}" ${comprado(it) ? "checked" : ""} aria-label="Marcar ${esc(it.nome)} como ${ehVistoria(it) ? "conferido" : "comprado"}">
     ${foto(fotoDe(it), it.nome, "photo thumb", iconeDoItem(it))}
     <button class="open" data-act="abrir" data-id="${it.id}">
       <div class="name">${esc(it.nome)}${it.quantidade > 1 ? ` <span class="muted small">× ${it.quantidade}</span>` : ""}</div>
-      <span class="tag"><i class="dot ${it.prioridade}"></i>${PRIORIDADES[it.prioridade]} · ${STATUS[it.status]}${nOpcoes ? ` · ${nOpcoes} ${plural(nOpcoes, "opção", "opções")}` : ""}</span>
+      <span class="tag"><i class="dot ${comprado(it) ? "comprado" : it.prioridade}"></i>${ehVistoria(it) ? (comprado(it) ? "Conferido" : "A conferir") : `${PRIORIDADES[it.prioridade]} · ${STATUS[it.status]}`}${nOpcoes ? ` · ${nOpcoes} ${plural(nOpcoes, "opção", "opções")}` : ""}</span>
     </button>
     <span class="price">${valor != null ? brl(valor) : ""}</span>
   </div>`;
@@ -43,7 +44,7 @@ export function telaInicio() {
   const t = resumoDe();
   const c = contagemRegressiva(S.config.data_mudanca || DATA_MUDANCA_PADRAO);
   const mes = c.alvo.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-  const proximos = prioritarios(S.itens, QTD_PRIORITARIOS);
+  const proximos = prioritarios(compras(), QTD_PRIORITARIOS);
   return `<section class="hero">
       <span class="eyebrow">Mudança prevista · ${esc(mes)}</span>
       <h1 class="display">Nosso Primeiro Lar</h1>
@@ -126,7 +127,7 @@ export function telaEsquecidos() {
 /* ---------- Etapas ---------- */
 export function telaEtapas() {
   const coluna = ([etapa, [titulo, descricao]]) => {
-    const lista = S.itens.filter((i) => i.etapa === etapa).sort((a, b) => pendentesPrimeiro(a, b) || ORDEM_PRIORIDADE[a.prioridade] - ORDEM_PRIORIDADE[b.prioridade]);
+    const lista = compras().filter((i) => i.etapa === etapa).sort((a, b) => pendentesPrimeiro(a, b) || ORDEM_PRIORIDADE[a.prioridade] - ORDEM_PRIORIDADE[b.prioridade]);
     const feitos = lista.filter(comprado).length;
     return `<div class="stage"><div><h2 class="h2 stage-title">${titulo}</h2><p class="muted small stage-desc">${descricao}</p></div>
       ${progresso(`${feitos} de ${lista.length}`, feitos, lista.length, "thin")}
@@ -142,7 +143,7 @@ export function telaFinancas() {
   const orc = S.config.orcamento_total;
   const chave = S.finPor;
   const ordemComodos = comodos();
-  const grupos = [...new Set(S.itens.map((i) => i[chave]))]
+  const grupos = [...new Set(compras().map((i) => i[chave]))]
     .sort((a, b) => (chave === "comodo" ? ordemComodos.indexOf(a) - ordemComodos.indexOf(b) : a.localeCompare(b, "pt-BR")));
   const maiorValor = Math.max(orc || 0, t.estTotal, t.gasto, 1);
   const comOrcamento = (f) => (orc != null ? brl(f(orc)) : "—");
@@ -168,7 +169,7 @@ export function telaFinancas() {
         ${segmentos([["comodo", "Cômodo"], ["categoria", "Categoria"]], chave, 'data-act="finPor"')}</div>
       <div class="fin"><div class="fin-row head"><span>${chave === "comodo" ? "Cômodo" : "Categoria"}</span><span>Estimado</span><span>Gasto</span><span>Falta</span></div>
       ${grupos.map((g) => {
-        const tg = resumoDe(S.itens.filter((i) => i[chave] === g));
+        const tg = resumoDe(compras().filter((i) => i[chave] === g));
         return `<div class="fin-row"><span>${esc(g)}</span><span data-l="Estimado">${brl(tg.estTotal)}</span><span data-l="Gasto">${brl(tg.gasto)}</span><span data-l="Falta">${brl(tg.reservar)}</span>${barra(pct(tg.gasto, tg.gasto + tg.reservar), "thin")}</div>`;
       }).join("")}</div>
       <p class="muted small">Estimado usa o preço estimado do item (ou da opção escolhida) multiplicado pela quantidade. Gasto considera o valor pago registrado nos itens comprados.</p>
@@ -284,9 +285,9 @@ export function painelItem() {
     <div class="sheet-body">
       <div><span class="eyebrow">${esc(it.comodo)} · ${esc(it.categoria)}</span><h2 class="display sheet-title">${esc(it.nome || "Novo item")}</h2>
         ${novo ? "" : historico(it)}</div>
-      ${novo ? "" : `<div><span class="eyebrow">Status</span><div class="status-pick" role="group" aria-label="Status do item">${Object.entries(STATUS).map(([k, l]) => `<button type="button" data-act="status" data-v="${k}" class="${it.status === k ? "on" : ""}" aria-pressed="${it.status === k}">${l}</button>`).join("")}</div></div>`}
+      ${novo || ehVistoria(it) ? "" : `<div><span class="eyebrow">Status</span><div class="status-pick" role="group" aria-label="Status do item">${Object.entries(STATUS).map(([k, l]) => `<button type="button" data-act="status" data-v="${k}" class="${it.status === k ? "on" : ""}" aria-pressed="${it.status === k}">${l}</button>`).join("")}</div></div>`}
       ${formItem(it, novo)}
-      ${novo ? "" : secaoOpcoes(it) + secaoComentarios(it)}
+      ${novo ? "" : (ehVistoria(it) ? "" : secaoOpcoes(it)) + secaoComentarios(it)}
     </div>
   </aside>`;
 }

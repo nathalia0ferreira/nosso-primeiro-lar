@@ -20,6 +20,18 @@ test("ícone: casos em que a ordem importa", () => {
   assert.equal(i("Fogão ou cooktop"), "fogao");
 });
 
+test("ícone: itens novos da pesquisa e vistoria", () => {
+  for (const [nome, esperado] of [["Filtro ou purificador de água", "copo"], ["Chuveiro", "chuveiro"], ["Escada doméstica", "escada"],
+    ["Ferro de passar", "ferro"], ["Tábua de passar roupa", "ferro"], ["Desentupidor", "sanitario"], ["Assento sanitário", "sanitario"],
+    ["Tesoura", "tesoura"], ["Lanterna", "lanterna"], ["Ventilador", "ventilador"], ["Assadeiras e formas", "panela"],
+    ["Mesa de jantar e cadeiras", "mesa"], ["Tigelas", "prato"], ["Isqueiro ou acendedor de fogão", "fogao"]]) assert.equal(i(nome), esperado, nome);
+  const v = (nome, categoria) => nomeDoIcone({ nome, categoria, comodo: "Vistoria do apartamento" });
+  assert.equal(v("Testar todas as tomadas", "Elétrica"), "eletrica");
+  assert.equal(v("Testar portas e fechaduras", "Portas e janelas"), "porta");
+  assert.equal(v("Fotografar tudo", "Documentos"), "documento");
+  assert.equal(v("Paredes sem fissuras", "Acabamentos"), "checklist");
+});
+
 test("ícone: categoria e cômodo como reserva; casinha por último", () => {
   assert.equal(i("Coisa nova", "Iluminação"), "luminaria");
   assert.equal(i("Algo", "Geral", "Cozinha"), "casa");

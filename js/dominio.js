@@ -1,6 +1,10 @@
 // Vocabulário do planejamento: valores aceitos pelo banco e seus rótulos na interface.
 
-export const COMODOS = ["Cozinha", "Quarto", "Banheiro", "Sala", "Lavanderia", "Organização e utilidades", "Decoração"];
+/** Checklist da vistoria do apartamento: aparece na lista, mas não é compra (fica fora de totais, finanças e etapas). */
+export const VISTORIA = "Vistoria do apartamento";
+export const ehVistoria = (item) => item.comodo === VISTORIA;
+
+export const COMODOS = ["Cozinha", "Quarto", "Banheiro", "Sala", "Lavanderia", "Organização e utilidades", "Decoração", VISTORIA];
 
 export const PRIORIDADES = { essencial: "Essencial", importante: "Importante", complementar: "Complementar" };
 

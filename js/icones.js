@@ -52,11 +52,25 @@ const D = {
   mesa: '<path d="M3 9h18M5 9l-1 10M19 9l1 10M3 9l2-3h14l2 3"/>',
   rack: '<rect x="2" y="11" width="20" height="8" rx="1"/><path d="M12 11v8M4 19v2M20 19v2"/>',
   papel: '<circle cx="9" cy="10" r="6"/><circle cx="9" cy="10" r="2"/><path d="M9 16h10V10h-4"/>',
+  chuveiro: '<path d="M4 4h7a5 5 0 0 1 5 5v1M12 10h8l-1 3h-6l-1-3zM13 16v2M16 16v3M19 16v2"/>',
+  escada: '<path d="M7 3 4 21M17 3l3 18M5.5 9h13M5 15h14"/>',
+  ventilador: '<circle cx="12" cy="10" r="2"/><path d="M12 8c0-3 1-5 3-5s2 3-1 5M14 11c3 0 5 1 5 3s-3 2-5-1M10 11c-3 1-5 3-3 4s3-1 3-3M12 12v9M8 21h8"/>',
+  ferro: '<path d="M3 17h15a3 3 0 0 0 3-3v-1a6 6 0 0 0-6-6H9L3 17z"/><path d="M9 7V5h7M7 13h2"/>',
+  lanterna: '<path d="M7 3h10l-2 6H9L7 3zM9 9h6v12H9zM12 13v2"/>',
+  tesoura: '<circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.5 16.5 18 3M15.5 16.5 6 3"/>',
+  sanitario: '<path d="M6 3h6v7H6zM4 10h16a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6zM9 16l-1 5h8l-1-5"/>',
+  documento: '<path d="M6 2h9l4 4v16H6z"/><path d="M15 2v4h4M9 11h7M9 15h7M9 19h4"/>',
+  porta: '<path d="M5 21V3h11v18M3 21h18M13 12v.01"/>',
+  checklist: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 8 1.5 1.5L12 7M8 14l1.5 1.5L12 13M14 8h3M14 14h3"/>',
   casa: '<path d="M3 11l9-7 9 7M5 10v10h14V10M10 20v-6h4v6"/>',
 };
 
 // Ordem importa: o mais específico primeiro ("escorredor de talheres" é escorredor, não talheres).
 const REGRAS = [
+  [/ferro de passar|tabua de passar/, "ferro"], [/chuveiro|hidraulica/, "chuveiro"], [/escada/, "escada"],
+  [/ventilador|climatiza/, "ventilador"], [/lanterna/, "lanterna"], [/tesoura/, "tesoura"], [/desentupidor|assento sanitario|vaso sanitario/, "sanitario"],
+  [/isqueiro|acendedor|gas\b/, "fogao"], [/assadeira|formas? de/, "panela"], [/ralador|peneira/, "talheres"],
+  [/documento|contrato|laudo|memorial|recibo/, "documento"], [/portas e janelas/, "porta"],
   [/escorredor/, "escorredor"], [/geladeira|freezer/, "geladeira"], [/fogao|cooktop/, "fogao"], [/micro-?ondas/, "microondas"],
   [/air ?fryer|fritadeira/, "airfryer"], [/liquidificador|batedeira|cafeteira|sanduicheira|torradeira|eletroport/, "eletroportatil"],
   [/xicara|caneca/, "xicara"], [/copo|taca/, "copo"], [/panos? de prato/, "toalha"], [/prato|louca|tigela/, "prato"],
@@ -67,7 +81,7 @@ const REGRAS = [
   [/manta|cobertor|edredom/, "manta"], [/maquina de lavar|lavadora|secadora/, "lavar"], [/vassoura|rodo|pa de lixo|escova/, "vassoura"],
   [/balde/, "balde"], [/varal|pregador/, "varal"], [/cesto/, "cesto"], [/cabide/, "cabide"],
   [/lampada/, "lampada"], [/luminaria|abajur|iluminacao/, "luminaria"], [/pilha|bateria/, "pilha"],
-  [/extens|filtros? de linha|adaptador|tomada|eletrica/, "eletrica"], [/fita/, "fita"], [/trena/, "trena"], [/ferrament/, "ferramenta"],
+  [/extens|filtros? de linha|adaptador|tomada|eletrica/, "eletrica"], [/filtro|purificador|jarra/, "copo"], [/fita/, "fita"], [/trena/, "trena"], [/ferrament/, "ferramenta"],
   [/socorro|saude|remedio/, "socorro"], [/organiz|caixa|porta-|suporte/, "caixa"],
   [/esponja|luva|pano|limpeza|sanitaria|desinfet/, "limpeza"],
   [/protetor de colchao|colchao/, "colchao"], [/jogo de cama|jogos de cama|lencol/, "cama"], [/cama/, "cama"],
@@ -80,11 +94,13 @@ const normalizar = (s) => String(s ?? "").toLowerCase().normalize("NFD").replace
 
 /** Nome do ícone para o item: tenta o nome, depois a categoria, depois o cômodo; senão, a casinha. */
 export function nomeDoIcone(item) {
-  for (const texto of [item.nome, item.categoria, item.comodo].map(normalizar)) {
+  // Vistoria: o ícone vem da categoria (elétrica, hidráulica...), não das palavras de cada tarefa.
+  const fontes = item.comodo === "Vistoria do apartamento" ? [item.categoria] : [item.nome, item.categoria, item.comodo];
+  for (const texto of fontes.map(normalizar)) {
     const regra = REGRAS.find(([re]) => re.test(texto));
     if (regra) return regra[1];
   }
-  return "casa";
+  return item.comodo === "Vistoria do apartamento" ? "checklist" : "casa";
 }
 
 export const iconeDoItem = (item) =>
