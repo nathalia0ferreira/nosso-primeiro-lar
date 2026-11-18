@@ -19,7 +19,7 @@ export const ORDEM_ETAPA = { antecedencia: 0, pesquisar: 1, meses_antes: 2, pert
 export const DATA_MUDANCA_PADRAO = "2029-02-01";
 export const QTD_PRIORITARIOS = 8;
 
-/** Pesquisa do mesmo produto em outras lojas a partir do link (formato de URL do achar.promo). */
-export const acharPromo = (link) => `https://achar.promo/chat/${crypto.randomUUID()}?url=${encodeURIComponent(link)}`;
+/** Pesquisa do mesmo produto em outras lojas: "achar.promo/" seguido do link do produto, tudo junto. */
+export const acharPromo = (link) => `https://achar.promo/${link.trim()}`;
 
 export const ITEM_NOVO = { nome: "", comodo: "Cozinha", categoria: "Geral", quantidade: 1, prioridade: "importante", status: "nao_iniciado", etapa: "pesquisar", esquecido: false };
