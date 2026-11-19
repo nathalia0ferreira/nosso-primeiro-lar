@@ -51,7 +51,6 @@ export function telaInicio() {
   const esquecidos = compras().filter((i) => i.esquecido);
   const vistoria = S.itens.filter(ehVistoria);
   const conta = (lista) => lista.filter(comprado).length;
-  const totalPrevisto = t.gasto + t.reservar;
   return `${dataDeHoje()}
     <section class="painel destaque">
       <span class="eyebrow">Mudança em ${esc(mes)}</span>
@@ -63,7 +62,7 @@ export function telaInicio() {
     <h2 class="eyebrow secao-painel">Resumo</h2>
     <a class="painel financeiro" href="#financas">
       <span class="mini-topo"><span class="ico-box">${svg("carteira")}</span><span><span class="mini-rotulo">Total estimado</span><span class="mini-valor">${brl(t.estTotal)}</span></span></span>
-      <span class="barra-dupla" aria-hidden="true"><i class="gasto" style="flex:${t.gasto || 0}"></i><i class="falta" style="flex:${t.reservar || (totalPrevisto ? 0 : 1)}"></i></span>
+      <span class="barra-dupla" aria-hidden="true"><i class="gasto" style="flex:${t.gasto || 0}"></i><i class="falta" style="flex:${t.reservar || 0}"></i></span>
       <span class="linha-legenda"><span><i class="ponto gasto"></i>Gasto ${brl(t.gasto)}</span><span><i class="ponto falta"></i>Falta ${brl(t.reservar)}</span></span>
       ${t.semPreco ? `<span class="small muted">${t.semPreco} ${plural(t.semPreco, "item ainda sem preço", "itens ainda sem preço")}</span>` : ""}
     </a>

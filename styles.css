@@ -357,3 +357,30 @@ a.painel:active { transform: scale(.98); }
 .linha-comodo { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) 0; text-decoration: none; border-top: 1px solid var(--line-soft); min-height: 64px; }
 .linha-comodo:first-child { border-top: 0; }
 .linha-nome { flex: 1; display: grid; min-width: 0; }
+
+/* Início compacto no celular + menu flutuante */
+@media (max-width: 900px) {
+  .shell { padding-bottom: calc(104px + env(safe-area-inset-bottom)); }
+  .top { padding-top: calc(12px + env(safe-area-inset-top)); padding-bottom: 0; }
+  .brand { font-size: 22px; }
+  .top .nav { left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); padding: 6px; border: 1px solid var(--line-soft); border-radius: 26px; background: rgba(22,22,21,.94); }
+  .nav a { min-height: 52px; padding: 6px 2px; font-size: 11px; }
+  #toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .saudacao { padding: var(--s2) 0 var(--s3); font-size: 14px; }
+  .painel { padding: var(--s4); gap: var(--s2); border-radius: 18px; }
+  .destaque-num { font-size: 48px; margin: var(--s1) 0 var(--s2); }
+  .linha { padding: 10px 0; font-size: 14px; }
+  .caixa-linha { padding: 10px var(--s3); border-radius: 12px; }
+  .secao-painel { margin: var(--s5) 0 var(--s2); }
+  .paineis { gap: 10px; margin-top: 10px; }
+  .paineis .painel { padding: var(--s3) 14px; gap: 6px; }
+  .paineis .mini-valor { font-size: 20px; }
+  .mini-rotulo { font-size: 13px; }
+  .mini-valor { font-size: 22px; }
+  .ico-box { width: 36px; height: 36px; border-radius: 10px; }
+  .ico-box .ico { width: 19px; height: 19px; }
+  .anel { width: 42px; height: 42px; }
+  .anel b { font-size: 10.5px; }
+  .lista-painel { padding: 4px var(--s3); }
+  .linha-comodo { min-height: 56px; padding: 10px 0; }
+}
