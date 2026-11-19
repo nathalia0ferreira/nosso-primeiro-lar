@@ -470,3 +470,8 @@ a.painel:active { transform: scale(.98); }
   .nav .nav-tab.on .nav-pill { background: var(--surface-2); }
   .nav .nav-tab[data-touch] .nav-pill { transform: scale(1.06); }
 }
+
+/* Deslizar o conteúdo para o lado troca de página; rolar para cima/baixo continua normal */
+.view { touch-action: pan-y; transition: transform .18s ease, opacity .18s ease; }
+.view.enter { transition: none; }
+.compare-wrap, .seg, .status-pick { touch-action: pan-x; }

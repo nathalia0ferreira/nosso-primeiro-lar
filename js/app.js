@@ -371,19 +371,24 @@ const navLimpar = () => { navArrastando = false; document.querySelectorAll(".nav
 document.addEventListener("pointerdown", (e) => {
   const nav = e.target.closest?.(".nav");
   if (!nav || e.pointerType === "mouse") return; // o mouse usa hover e clique normais
-  navArrastando = true; navMarcar(nav, navAbaEm(nav, e.clientX));
+  navArrastando = true; navEscolheu = false; navMarcar(nav, navAbaEm(nav, e.clientX));
 });
 document.addEventListener("pointermove", (e) => {
   if (!navArrastando) return;
   const nav = document.querySelector(".nav");
-  if (nav) navMarcar(nav, navAbaEm(nav, e.clientX));
+  if (!nav) return;
+  const aba = navAbaEm(nav, e.clientX);
+  navMarcar(nav, aba);
+  // arrastar a cápsula vai passando as páginas ao vivo
+  const alvo = aba?.getAttribute("href");
+  if (alvo && alvo !== location.hash) { navEscolheu = true; location.hash = alvo; }
 });
 document.addEventListener("pointerup", (e) => {
   if (!navArrastando) return;
   const nav = document.querySelector(".nav");
   const aba = nav && navAbaEm(nav, e.clientX);
   navLimpar();
-  if (aba) { navEscolheu = true; location.hash = aba.getAttribute("href"); }
+  if (aba && aba.getAttribute("href") !== location.hash) { navEscolheu = true; location.hash = aba.getAttribute("href"); }
 });
 document.addEventListener("pointercancel", navLimpar);
 // o clique que o navegador manda após o toque mira a aba onde o dedo encostou primeiro: ignora, a escolha já foi no soltar
@@ -391,6 +396,49 @@ document.addEventListener("click", (e) => {
   if (!navEscolheu) return;
   navEscolheu = false;
   if (e.target.closest?.(".nav")) { e.preventDefault(); e.stopPropagation(); }
+}, true);
+
+/* ---------- deslizar o conteúdo para o lado troca de página (como no Instagram) ---------- */
+const ORDEM_ABAS = Object.keys(ROTAS);
+function irVizinho(passo) {
+  const atual = location.hash.replace(/^#/, "").split("/")[0];
+  const base = atual === "comodo" ? "lista" : (ORDEM_ABAS.includes(atual) ? atual : "inicio");
+  const i = ORDEM_ABAS.indexOf(base) + passo;
+  if (i >= 0 && i < ORDEM_ABAS.length) location.hash = ORDEM_ABAS[i];
+}
+// começa em qualquer lugar do conteúdo, menos onde o toque já tem outro uso (digitar ou rolar de lado)
+const podeDeslizar = (t) => t?.closest?.("#view") && !t.closest(".sheet, input, textarea, select, .seg, .compare-wrap, .status-pick");
+let swX = 0, swY = 0, swAtivo = false, swEixo = null, swArrastou = false;
+document.addEventListener("pointerdown", (e) => {
+  if (e.pointerType === "mouse" || !podeDeslizar(e.target)) return;
+  swX = e.clientX; swY = e.clientY; swAtivo = true; swEixo = null; swArrastou = false;
+});
+document.addEventListener("pointermove", (e) => {
+  if (!swAtivo) return;
+  const dx = e.clientX - swX, dy = e.clientY - swY;
+  if (!swEixo) {
+    if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) { swAtivo = false; return; } // é rolagem vertical
+    if (Math.abs(dx) > 14) swEixo = "x"; else return;
+  }
+  swArrastou = true;
+  const view = document.getElementById("view");
+  if (view) { view.style.transform = `translateX(${Math.max(-70, Math.min(70, dx))}px)`; view.style.opacity = String(1 - Math.min(0.25, Math.abs(dx) / 500)); }
+});
+function swFim(e) {
+  if (!swAtivo) return;
+  swAtivo = false;
+  const view = document.getElementById("view");
+  if (view) { view.style.transform = ""; view.style.opacity = ""; }
+  if (swEixo !== "x") return;
+  const dx = e.clientX - swX;
+  if (dx <= -60) irVizinho(1);
+  else if (dx >= 60) irVizinho(-1);
+}
+document.addEventListener("pointerup", swFim);
+document.addEventListener("pointercancel", () => { swAtivo = false; const v = document.getElementById("view"); if (v) { v.style.transform = ""; v.style.opacity = ""; } });
+// um deslize não deve abrir o cartão/link onde começou
+document.addEventListener("click", (e) => {
+  if (swArrastou) { swArrastou = false; e.preventDefault(); e.stopPropagation(); }
 }, true);
 
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && S.item) fecharPainel(); });
