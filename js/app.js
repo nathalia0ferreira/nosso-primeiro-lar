@@ -43,7 +43,7 @@ function render() {
   const painelAntes = document.querySelector(".sheet.show");
   const rolagemPainel = painelAntes?.scrollTop ?? 0;
   $app.innerHTML = `<a class="skip" href="#view">Pular para o conteúdo</a><div class="shell">
-    <header class="top">
+    <header class="top${rota === "inicio" ? "" : " so-menu"}">
       <a class="brand" href="#inicio">Nosso Primeiro Lar</a>
       <nav class="nav" aria-label="Principal">${Object.entries(ROTAS).map(([k, [rotulo]]) => `<a href="#${k}" class="${k === menu ? "on" : ""}"${k === rota ? ' aria-current="page"' : ""}>${svg(ICONE_MENU[k])}<span>${rotulo}</span></a>`).join("")}</nav>
       <div class="who"><span>${esc(S.membros[meuId()] || "")}</span><button class="linkbtn" data-act="sair">Sair</button></div>

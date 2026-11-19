@@ -409,3 +409,8 @@ a.painel:active { transform: scale(.98); }
   .paineis .mini-valor { font-size: 18px; }
 }
 .abrir-loja { margin-top: var(--s3); }
+
+/* Nome do app e "Sair" só no Início; nas outras páginas fica só o menu */
+.top.so-menu .brand, .top.so-menu .who { display: none; }
+.top.so-menu { justify-content: center; }
+@media (max-width: 900px) { .top.so-menu { padding: 0; } }
