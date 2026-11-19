@@ -1,8 +1,8 @@
 // Geração do HTML de cada tela. Só lê o estado; ações ficam em app.js.
-import { ETAPAS, ITEM_NOVO, VISTORIA, ehVistoria, ORDEM_PRIORIDADE, PRIORIDADES, QTD_PRIORITARIOS, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
-import { comprado, contagemRegressiva, maisBarata, prioritarios, resumo, totalOpcao } from "./calculos.js";
+import { ETAPAS, ITEM_NOVO, VISTORIA, ehVistoria, ORDEM_PRIORIDADE, PRIORIDADES, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
+import { comprado, contagemRegressiva, maisBarata, resumo, totalOpcao } from "./calculos.js";
 import { brl, dataBR, esc, numeroParaCampo, pct } from "./formato.js";
-import { iconeDoComodo, iconeDoItem } from "./icones.js";
+import { iconeDoComodo, iconeDoItem, svg } from "./icones.js";
 import { ICONES, barra, cabecalhoPagina, foto, linkExterno, progresso, segmentos } from "./ui.js";
 import { S, comodos, estimadoDe, fotoDe, itemPorId, meuId, nomeDe, opcoesDe } from "./estado.js";
 
@@ -12,17 +12,6 @@ const pendentesPrimeiro = (a, b) => comprado(a) - comprado(b);
 const plural = (n, um, varios) => (n > 1 ? varios : um);
 
 /* ---------- componentes de item ---------- */
-function cardItem(it) {
-  const est = estimadoDe(it);
-  return `<button class="card ${comprado(it) ? "done" : ""}" data-act="abrir" data-id="${it.id}">
-    ${foto(fotoDe(it), it.nome, "photo", iconeDoItem(it))}
-    <div class="body">
-      <span class="name">${esc(it.nome)}</span>
-      <span class="tag"><i class="dot ${comprado(it) ? "comprado" : it.prioridade}"></i>${esc(it.comodo)} · ${STATUS[it.status]}</span>
-      ${est != null ? `<span class="price left">${brl(est)}</span>` : ""}
-    </div></button>`;
-}
-
 function linhaItem(it) {
   const valor = comprado(it) && it.preco_pago != null ? it.preco_pago : estimadoDe(it);
   const nOpcoes = opcoesDe(it.id).length;
@@ -37,41 +26,60 @@ function linhaItem(it) {
   </div>`;
 }
 
-const estatistica = (rotulo, valor) => `<div class="stat"><span class="eyebrow">${rotulo}</span><b>${valor}</b></div>`;
+/* ---------- Início (painéis) ---------- */
+/** Anel de progresso com a porcentagem no meio. */
+function anel(p) {
+  const c = 2 * Math.PI * 18;
+  return `<span class="anel" role="img" aria-label="${p}%"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18"/><circle class="anel-valor" cx="22" cy="22" r="18" stroke-dasharray="${(c * Math.min(p, 100)) / 100} ${c}"/></svg><b>${p}%</b></span>`;
+}
 
-/* ---------- Início ---------- */
+const miniPainel = (href, icone, rotulo, valor, p) => `<a class="painel mini" href="${href}">
+    <span class="mini-topo"><span class="ico-box">${svg(icone)}</span>${p == null ? "" : anel(p)}</span>
+    <span class="mini-rotulo">${rotulo}</span><span class="mini-valor">${valor}</span></a>`;
+
+function saudacao() {
+  const h = new Date().getHours();
+  const oi = h >= 5 && h < 12 ? "Bom dia" : h < 18 && h >= 12 ? "Boa tarde" : "Boa noite";
+  const nome = (S.membros[meuId()] || "").split(" ")[0];
+  const hoje = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  return `<header class="saudacao"><span class="muted">${esc(hoje[0].toUpperCase() + hoje.slice(1))}</span><h1 class="saudacao-titulo">${oi}${nome ? `, ${esc(nome)}` : ""}</h1></header>`;
+}
+
 export function telaInicio() {
   const t = resumoDe();
   const c = contagemRegressiva(S.config.data_mudanca || DATA_MUDANCA_PADRAO);
   const mes = c.alvo.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-  const proximos = prioritarios(compras(), QTD_PRIORITARIOS);
-  return `<section class="hero">
-      <span class="eyebrow">Mudança prevista · ${esc(mes)}</span>
-      <h1 class="display">Nosso Primeiro Lar</h1>
-      <div class="hero-meta">
-        <div><div class="count">${c.dias.toLocaleString("pt-BR")}</div><span class="muted small">dias até a mudança</span></div>
-        <div><div class="count">${c.meses}</div><span class="muted small">meses para planejar</span></div>
-        <div class="hero-progress">${progresso("Progresso das compras", t.comprados, t.total)}</div>
-      </div>
+  const orc = S.config.orcamento_total;
+  const esquecidos = compras().filter((i) => i.esquecido);
+  const vistoria = S.itens.filter(ehVistoria);
+  const conta = (lista) => lista.filter(comprado).length;
+  const totalPrevisto = t.gasto + t.reservar;
+  return `${saudacao()}
+    <section class="painel destaque">
+      <span class="eyebrow">Mudança em ${esc(mes)}</span>
+      <div class="destaque-num">${c.dias.toLocaleString("pt-BR")} <small>dias</small></div>
+      <div class="linha"><span>Meses para planejar</span><b>${c.meses}</b></div>
+      <div class="linha"><span class="muted">Compras feitas</span><b>${t.comprados} de ${t.total}</b></div>
+      <div class="linha caixa-linha"><span class="muted">Ainda reservar</span><b class="destaque-valor">${brl(t.reservar)}</b></div>
     </section>
-    <section class="section">
-      <div class="stats">
-        ${estatistica("Planejados", t.total)}${estatistica("Comprados", t.comprados)}${estatistica("Pendentes", t.pendentes)}
-        ${estatistica("Total estimado", brl(t.estTotal))}${estatistica("Já gasto", brl(t.gasto))}${estatistica("Ainda reservar", brl(t.reservar))}
-      </div>
-      ${t.semPreco ? `<p class="muted small">${t.semPreco} itens pendentes ainda sem preço estimado — os totais vão ficando mais precisos conforme vocês adicionam valores.</p>` : ""}
-    </section>
-    <section class="section">
-      <div class="section-head"><div><span class="eyebrow">Próximos passos</span><h2 class="h2">Itens prioritários</h2></div><a class="pill" href="#etapas">Ver por etapas</a></div>
-      ${proximos.length ? `<div class="grid">${proximos.map(cardItem).join("")}</div>` : `<p class="empty">Tudo comprado. Agora é só se mudar.</p>`}
-    </section>
-    <section class="section">
-      <div class="section-head"><div><span class="eyebrow">Por cômodo</span><h2 class="h2">Andamento</h2></div></div>
-      <div class="fin">${comodos().map((cm) => {
-        const tc = resumoDe(S.itens.filter((i) => i.comodo === cm));
-        return `<a class="fin-row fin-link" href="${linkComodo(cm)}"><span>${esc(cm)}</span><span class="muted small">${tc.comprados} de ${tc.total}</span>${barra(pct(tc.comprados, tc.total), "thin")}</a>`;
-      }).join("")}</div>
-    </section>`;
+    <h2 class="eyebrow secao-painel">Resumo</h2>
+    <a class="painel financeiro" href="#financas">
+      <span class="mini-topo"><span class="ico-box">${svg("carteira")}</span><span><span class="mini-rotulo">Total estimado</span><span class="mini-valor">${brl(t.estTotal)}</span></span></span>
+      <span class="barra-dupla" aria-hidden="true"><i class="gasto" style="flex:${t.gasto || 0}"></i><i class="falta" style="flex:${t.reservar || (totalPrevisto ? 0 : 1)}"></i></span>
+      <span class="linha-legenda"><span><i class="ponto gasto"></i>Gasto ${brl(t.gasto)}</span><span><i class="ponto falta"></i>Falta ${brl(t.reservar)}</span></span>
+      ${t.semPreco ? `<span class="small muted">${t.semPreco} ${plural(t.semPreco, "item ainda sem preço", "itens ainda sem preço")}</span>` : ""}
+    </a>
+    <div class="paineis">
+      ${miniPainel("#lista", "sacola", "Compras", `${t.comprados} de ${t.total}`, pct(t.comprados, t.total))}
+      ${miniPainel("#financas", "carteira", "Orçamento usado", orc ? brl(t.gasto) : "Sem orçamento", orc ? pct(t.gasto, orc) : null)}
+      ${miniPainel("#esquecidos", "lampada", "Esquecidos garantidos", `${conta(esquecidos)} de ${esquecidos.length}`, pct(conta(esquecidos), esquecidos.length))}
+      ${miniPainel(linkComodo(VISTORIA), "checklist", "Vistoria conferida", `${conta(vistoria)} de ${vistoria.length}`, pct(conta(vistoria), vistoria.length))}
+    </div>
+    <h2 class="eyebrow secao-painel">Por cômodo</h2>
+    <div class="painel lista-painel">${comodos().filter((cm) => cm !== VISTORIA).map((cm) => {
+      const tc = resumoDe(S.itens.filter((i) => i.comodo === cm));
+      return `<a class="linha-comodo" href="${linkComodo(cm)}"><span class="ico-box sm">${iconeDoComodo(cm)}</span><span class="linha-nome">${esc(cm)}<span class="small muted">${tc.comprados} de ${tc.total}</span></span>${anel(pct(tc.comprados, tc.total))}</a>`;
+    }).join("")}</div>`;
 }
 
 /* ---------- Lista ---------- */

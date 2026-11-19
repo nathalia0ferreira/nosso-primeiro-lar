@@ -2,6 +2,7 @@
 import { statusAoDesmarcar } from "./calculos.js";
 import { esc, lerNumero, numeroParaCampo, textoOuNulo, urlOk } from "./formato.js";
 import { lerForm, toast } from "./ui.js";
+import { svg } from "./icones.js";
 import { acharPromo } from "./dominio.js";
 import { S, carregar, escolhidaDe, itemPorId, meuId, opcoesDe, ouvirMudancas, salvar, sb } from "./estado.js";
 import { itensListaHTML, painelItem, telaComodo, telaEsquecidos, telaEtapas, telaFinancas, telaInicio, telaLista, telaLogin, telaSemAcesso } from "./telas.js";
@@ -18,6 +19,7 @@ const ROTAS = {
   etapas: ["Etapas", telaEtapas],
   financas: ["Finanças", telaFinancas],
 };
+const ICONE_MENU = { inicio: "casa", lista: "checklist", esquecidos: "lampada", etapas: "calendario", financas: "carteira" };
 const PAGINAS = { ...ROTAS, comodo: ["Lista", telaComodo] }; // páginas internas que não aparecem no menu
 /** "#comodo/Cozinha" vira { rota: "comodo", param: "Cozinha" }. */
 function rotaAtual() {
@@ -43,7 +45,7 @@ function render() {
   $app.innerHTML = `<a class="skip" href="#view">Pular para o conteúdo</a><div class="shell">
     <header class="top">
       <a class="brand" href="#inicio">Nosso Primeiro Lar</a>
-      <nav class="nav" aria-label="Principal">${Object.entries(ROTAS).map(([k, [rotulo]]) => `<a href="#${k}" class="${k === menu ? "on" : ""}"${k === rota ? ' aria-current="page"' : ""}>${rotulo}</a>`).join("")}</nav>
+      <nav class="nav" aria-label="Principal">${Object.entries(ROTAS).map(([k, [rotulo]]) => `<a href="#${k}" class="${k === menu ? "on" : ""}"${k === rota ? ' aria-current="page"' : ""}>${svg(ICONE_MENU[k])}<span>${rotulo}</span></a>`).join("")}</nav>
       <div class="who"><span>${esc(S.membros[meuId()] || "")}</span><button class="linkbtn" data-act="sair">Sair</button></div>
     </header>
     <main class="view${entrou ? " enter" : ""}" id="view" tabindex="-1">${PAGINAS[rota][1](param)}</main>

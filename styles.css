@@ -305,3 +305,55 @@ textarea.input { min-height: 84px; resize: vertical; }
 .grupo-comodo:first-child { margin-top: var(--s5); }
 .grupo-titulo { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); text-decoration: none; padding-bottom: var(--s2); border-bottom: 1px solid var(--line-soft); }
 .grupo-titulo .chev { transform: rotate(-90deg); }
+
+/* Menu com ícones */
+.nav a { display: inline-flex; align-items: center; gap: 6px; }
+.nav a .ico { width: 18px; height: 18px; flex: none; }
+@media (max-width: 900px) {
+  .nav a { flex-direction: column; justify-content: center; gap: 3px; font-size: 11.5px; padding: 8px 4px; border-radius: 16px; }
+  .nav a .ico { width: 22px; height: 22px; }
+}
+
+/* Início em painéis */
+.saudacao { display: grid; gap: var(--s1); padding: var(--s5) 0 var(--s4); }
+.saudacao-titulo { font-family: var(--serif); font-size: clamp(34px, 8vw, 48px); line-height: 1.05; }
+.painel { display: grid; gap: var(--s3); background: var(--surface); border: 1px solid var(--line-soft); border-radius: 20px; padding: var(--s5); text-decoration: none; }
+a.painel { transition: border-color .2s, transform .2s; }
+a.painel:hover { border-color: var(--line); }
+a.painel:active { transform: scale(.98); }
+.destaque { gap: var(--s2); }
+.destaque-num { font-family: var(--serif); font-size: clamp(52px, 15vw, 72px); line-height: 1; margin: var(--s2) 0 var(--s3); }
+.destaque-num small { font-size: .38em; color: var(--muted); }
+.linha { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); padding: var(--s3) 0; border-top: 1px solid var(--line-soft); font-variant-numeric: tabular-nums; }
+.linha b { font-weight: 600; }
+.caixa-linha { border: 1px solid var(--line-soft); border-radius: 14px; padding: var(--s3) var(--s4); margin-top: var(--s2); }
+.destaque-valor { color: var(--accent); }
+.secao-painel { margin: var(--s6) 0 var(--s3); padding-left: var(--s1); }
+.ico-box { width: 42px; height: 42px; border-radius: 12px; background: var(--surface-2); display: grid; place-items: center; color: var(--accent); flex: none; }
+.ico-box .ico { width: 22px; height: 22px; color: inherit; display: block; }
+.ico-box.sm { width: 38px; height: 38px; border-radius: 11px; }
+.ico-box.sm .ico { width: 20px; height: 20px; }
+.mini-topo { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+.financeiro .mini-topo { justify-content: flex-start; }
+.financeiro .mini-topo > span:last-child { display: grid; }
+.mini-rotulo { color: var(--muted); font-size: 14px; }
+.mini-valor { font-family: var(--serif); font-size: 26px; line-height: 1.15; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.paineis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); margin-top: var(--s3); }
+.paineis .painel { padding: var(--s4); align-content: start; }
+.paineis .mini-valor { font-size: 22px; }
+@media (min-width: 900px) { .paineis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.anel { position: relative; width: 46px; height: 46px; flex: none; display: grid; place-items: center; }
+.anel svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.anel circle { fill: none; stroke: var(--line); stroke-width: 4; }
+.anel .anel-valor { stroke: var(--accent); stroke-linecap: round; }
+.anel b { font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.barra-dupla { display: flex; gap: 3px; height: 8px; border-radius: 99px; overflow: hidden; background: var(--line); }
+.barra-dupla i { display: block; min-width: 0; }
+.barra-dupla .gasto, .ponto.gasto { background: var(--ok); }
+.barra-dupla .falta, .ponto.falta { background: var(--accent); }
+.linha-legenda { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ponto { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.lista-painel { padding: var(--s2) var(--s4); gap: 0; }
+.linha-comodo { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) 0; text-decoration: none; border-top: 1px solid var(--line-soft); min-height: 64px; }
+.linha-comodo:first-child { border-top: 0; }
+.linha-nome { flex: 1; display: grid; min-width: 0; }
