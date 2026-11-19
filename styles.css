@@ -414,3 +414,7 @@ a.painel:active { transform: scale(.98); }
 .top.so-menu .brand, .top.so-menu .who { display: none; }
 .top.so-menu { justify-content: center; }
 @media (max-width: 900px) { .top.so-menu { padding: 0; } }
+.hero.titulo-linha { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); flex-wrap: nowrap; }
+.titulo-linha .page-title { font-size: clamp(21px, 5.6vw, 40px); white-space: nowrap; }
+.titulo-linha .seg { flex-wrap: nowrap; flex: none; }
+.titulo-linha .seg button { padding: 7px 10px; }
