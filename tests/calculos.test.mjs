@@ -1,7 +1,7 @@
 // Rodar com: node --test tests/
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contagemRegressiva, maisBarata, totalOpcao, precoUnitario, prioritarios, resumo, statusAoDesmarcar, valorEstimado } from "../js/calculos.js";
+import { contagemRegressiva, maisBarata, opcaoDoLink, totalOpcao, precoUnitario, prioritarios, resumo, statusAoDesmarcar, valorEstimado } from "../js/calculos.js";
 import { esc, lerNumero, urlOk } from "../js/formato.js";
 
 const item = (o) => ({ id: "x", quantidade: 1, status: "nao_iniciado", prioridade: "importante", etapa: "pesquisar", ordem: 0, preco_estimado: null, preco_pago: null, ...o });
@@ -66,6 +66,17 @@ test("frete: total só com frete informado; mais barata compara total", () => {
   assert.deepEqual(maisBarata(ops), { id: "b", comFrete: true });
   assert.deepEqual(maisBarata([{ id: "a", preco: 100, frete: null }, { id: "c", preco: 90, frete: null }]), { id: "c", comFrete: false });
   assert.equal(maisBarata([{ id: "a", preco: null, frete: null }]), null);
+});
+
+test("opção pelo link: usa a leitura da página ou cai no nome do item", () => {
+  const lido = { loja: "Shopee (via JáCotei)", url: "https://loja.com/p", consultado_em: "2026-11-19T10:00:00Z",
+    produto: { nome: "Air Fryer X", preco: 299.9, moeda: "BRL", imagem: "https://img/x.jpg", marca: "Philco", disponivel: true } };
+  assert.deepEqual(opcaoDoLink("Air fryer", "https://jacotei.com.br/x/p", lido), {
+    nome: "Air Fryer X", loja: "Shopee (via JáCotei)", preco: 299.9, url: "https://loja.com/p", imagem_url: "https://img/x.jpg",
+    caracteristicas: "Marca: Philco", consultado_em: "2026-11-19T10:00:00Z" });
+  const sem = opcaoDoLink("Air fryer", "https://www.lojinha.com.br/produto", { erro: "loja_indisponivel" });
+  assert.equal(sem.nome, "Air fryer"); assert.equal(sem.loja, "lojinha.com.br"); assert.equal(sem.preco, null); assert.equal(sem.consultado_em, null);
+  assert.equal(opcaoDoLink("X", "https://a.com", { produto: { nome: "Y", preco: 10, moeda: "USD" } }).preco, null); // preço em dólar não entra
 });
 
 test("formato: números brasileiros, links e escape", () => {

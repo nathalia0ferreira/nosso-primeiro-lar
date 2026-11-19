@@ -243,22 +243,13 @@ function formItem(it, novo) {
   </form>`;
 }
 
-const formOpcao = (it) => `<form id="form-opcao" class="fields callout option-form">
-    <div class="field full"><label for="op-url">Link do produto</label>
-      <div class="link-row"><input class="input" id="op-url" name="url" type="url" inputmode="url" placeholder="Cole aqui o link da loja" autocomplete="off" value="${esc(it.link_produto)}">
-        <button class="btn sm ghost" type="button" data-act="colarLink">Colar</button></div>
-      <div class="row"><button class="btn sm" type="button" data-act="acharMaisBarato">Achar mais barato</button>
-        <button class="btn sm ghost" type="button" data-act="lerLink">Preencher pelo link</button></div>
-      <p class="small muted link-msg" id="link-msg" role="status" aria-live="polite">Funciona com a maioria das lojas e comparadores, como o JáCotei. Confira os dados antes de salvar.</p></div>
-    <input type="hidden" name="consultado_em">
-    <label class="field full">Produto / modelo<input class="input" name="nome" required></label>
-    <label class="field">Loja<input class="input" name="loja"></label>
-    <label class="field">Preço (R$)<input class="input" name="preco" inputmode="decimal"></label>
-    <label class="field">Frete (R$)<input class="input" name="frete" inputmode="decimal" placeholder="Vazio se não souber"></label>
-    <label class="field full">Foto (link da imagem)<input class="input" name="imagem_url" type="url" placeholder="https://"></label>
-    <label class="field full">Características<textarea class="input" name="caracteristicas" placeholder="Capacidade, medidas, voltagem, cor…"></textarea></label>
-    <label class="field full">Observações<textarea class="input" name="observacoes"></textarea></label>
-    <div class="full"><button class="btn" type="submit">Salvar opção</button></div>
+const formOpcao = () => `<form id="form-opcao" class="callout option-form">
+    <label class="field" for="op-url">Link do produto em outra loja</label>
+    <div class="link-row"><input class="input" id="op-url" name="url" type="url" inputmode="url" placeholder="Cole aqui o link da loja" autocomplete="off" required>
+      <button class="btn sm ghost" type="button" data-act="colarLink">Colar</button></div>
+    <div class="row"><button class="btn sm" type="submit">Salvar opção</button>
+      <button class="btn sm ghost" type="button" data-act="acharMaisBarato">Achar mais barato</button></div>
+    <p class="small muted link-msg" id="link-msg" role="status" aria-live="polite">Nome, loja, preço e foto são lidos da página ao salvar.</p>
   </form>`;
 
 function opcaoHTML(o) {
@@ -299,7 +290,7 @@ function secaoOpcoes(it) {
   const opcoes = opcoesDe(it.id);
   return `<div>
     <div class="between"><div><span class="eyebrow">Comparação</span><h3 class="h2 sub-title">Opções encontradas</h3></div><button class="btn sm ghost" data-act="toggleOpcao">${S.novaOpcao ? "Cancelar" : "Adicionar opção"}</button></div>
-    ${S.novaOpcao ? formOpcao(it) : `<button class="btn achar" type="button" data-act="acharMaisBarato">Achar mais barato</button>`}
+    ${S.novaOpcao ? formOpcao() : `<button class="btn achar" type="button" data-act="acharMaisBarato">Achar mais barato</button>`}
     <div class="options">${opcoes.map(opcaoHTML).join("") || `<p class="muted small">Nenhuma opção ainda. Adicionem links de lojas diferentes para comparar.</p>`}</div>
     ${opcoes.length > 1 ? tabelaComparacao(opcoes) : ""}
   </div>`;

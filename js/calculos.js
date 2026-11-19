@@ -33,6 +33,26 @@ export function maisBarata(opcoes) {
   return { id: melhor.id, comFrete: comTotal.length > 0 };
 }
 
+/**
+ * Opção a partir de um link: usa o que a leitura da página trouxe; se não trouxe nada,
+ * fica com o nome do item e a loja tirada do endereço (sem preço inventado).
+ */
+export function opcaoDoLink(nomeItem, url, lido) {
+  const p = lido?.produto;
+  const emReais = p && (!p.moeda || p.moeda === "BRL");
+  const detalhes = p ? [p.marca && `Marca: ${p.marca}`, p.modelo && `Modelo: ${p.modelo}`, p.gtin && `Código de barras: ${p.gtin}`,
+    p.sku && `Código na loja: ${p.sku}`, p.disponivel === false && "Indisponível na consulta"].filter(Boolean).join("\n") : "";
+  return {
+    nome: p?.nome || nomeItem,
+    loja: lido?.loja || new URL(url).hostname.replace(/^www\./, ""),
+    preco: emReais ? p.preco ?? null : null,
+    url: lido?.url || url,
+    imagem_url: p?.imagem ?? null,
+    caracteristicas: detalhes || null,
+    consultado_em: p ? lido.consultado_em ?? null : null,
+  };
+}
+
 /** Gasto só conta para itens comprados; preco_pago já é o total da compra. */
 export const valorPago = (item) => (comprado(item) ? Number(item.preco_pago || 0) : 0);
 

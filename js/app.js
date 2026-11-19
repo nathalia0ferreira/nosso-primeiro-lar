@@ -1,6 +1,6 @@
 // Ponto de entrada: navegação, eventos da interface e sessão.
-import { statusAoDesmarcar } from "./calculos.js";
-import { esc, lerNumero, numeroParaCampo, textoOuNulo, urlOk } from "./formato.js";
+import { opcaoDoLink, statusAoDesmarcar } from "./calculos.js";
+import { esc, lerNumero, textoOuNulo } from "./formato.js";
 import { lerForm, toast } from "./ui.js";
 import { svg } from "./icones.js";
 import { acharPromo } from "./dominio.js";
@@ -66,7 +66,6 @@ function render() {
 let renderPendente = false;
 let rascunho = false; // há texto digitado e ainda não salvo num formulário do painel
 const editando = () => rascunho || document.activeElement?.matches("form .input, #orc");
-const rascunhoAtivo = () => { rascunho = true; };
 function liberarRender() {
   rascunho = false;
   if (renderPendente) { renderPendente = false; render(); }
@@ -217,8 +216,8 @@ function apagarComentario(comentarioId) {
 const MSG_LINK = {
   loja_nao_suportada: "Esse link não é de um site público. Confira o endereço.",
   endereco_bloqueado: "Esse endereço não pode ser aberto. Confira o link.",
-  produto_nao_identificado: "Não encontrei os dados do produto nessa página. Preencha à mão.",
-  loja_indisponivel: "A loja não deixou ler a página agora. Preencha à mão ou tente mais tarde.",
+  produto_nao_identificado: "Não encontrei os dados do produto nessa página.",
+  loja_indisponivel: "A loja não deixou ler a página agora.",
   redirecionamento_bloqueado: "O link redireciona para um endereço que não pode ser aberto.",
   nao_e_pagina: "Esse link não abre uma página de produto.",
   tempo_esgotado: "A loja demorou demais para responder. Tente de novo.",
@@ -249,36 +248,6 @@ function acharMaisBarato(_el, it) {
     return campo.focus();
   }
   window.open(acharPromo(url), "_blank", "noopener");
-}
-
-async function lerLink() {
-  const form = document.getElementById("form-opcao");
-  const campo = (n) => form.elements[n];
-  const msg = document.getElementById("link-msg");
-  const url = campo("url").value.trim();
-  if (!/^https:\/\//i.test(url)) { msg.textContent = "Cole um link que comece com https://"; campo("url").focus(); return; }
-  const botao = form.querySelector('[data-act="lerLink"]');
-  botao.disabled = true; msg.textContent = "Lendo a página da loja…";
-  const { data, error } = await sb.functions.invoke("ler-produto", { body: { url } });
-  botao.disabled = false;
-  if (error || !data?.produto) {
-    msg.textContent = MSG_LINK[data?.erro] || "Não foi possível ler o link agora. Preencha à mão.";
-    return;
-  }
-  const p = data.produto;
-  const emReais = !p.moeda || p.moeda === "BRL";
-  const preencher = (n, v) => { if (v != null && v !== "") campo(n).value = v; };
-  preencher("nome", p.nome);
-  preencher("loja", data.loja);
-  preencher("url", data.url);
-  if (emReais) preencher("preco", numeroParaCampo(p.preco));
-  preencher("imagem_url", p.imagem);
-  const detalhes = [p.marca && `Marca: ${p.marca}`, p.modelo && `Modelo: ${p.modelo}`, p.gtin && `Código de barras: ${p.gtin}`,
-    p.sku && `Código na loja: ${p.sku}`, p.disponivel === false && "Indisponível na consulta"].filter(Boolean).join("\n");
-  if (detalhes && !campo("caracteristicas").value) campo("caracteristicas").value = detalhes;
-  campo("consultado_em").value = data.consultado_em;
-  rascunhoAtivo();
-  msg.textContent = `Dados de ${data.loja} preenchidos${p.preco == null || !emReais ? ", sem preço" : ""}. Confira, informe o frete se souber e salve.`;
 }
 
 /* ---------- formulários ---------- */
@@ -316,18 +285,19 @@ async function fotoDoLink(it) {
 }
 
 async function enviarOpcao(form) {
-  const d = lerForm(form);
-  const url = textoOuNulo(d.url), imagem = textoOuNulo(d.imagem_url);
-  if ((url && !urlOk(url)) || (imagem && !urlOk(imagem))) return toast("Os links precisam começar com https://", true);
-  const nova = await salvar("opcoes", "insert", {
-    item_id: S.item, nome: d.nome.trim(), loja: textoOuNulo(d.loja), preco: lerNumero(d.preco), frete: lerNumero(d.frete),
-    consultado_em: d.consultado_em || null, url, imagem_url: imagem,
-    caracteristicas: textoOuNulo(d.caracteristicas), observacoes: textoOuNulo(d.observacoes),
-  });
-  S.opcoes.push(nova); S.novaOpcao = false;
+  const url = form.elements.url.value.trim();
+  const msg = document.getElementById("link-msg");
+  if (!/^https:\/\//i.test(url)) { msg.textContent = "Cole um link que comece com https://"; return form.elements.url.focus(); }
+  if (opcoesDe(S.item).some((o) => o.url === url)) { msg.textContent = "Esse link já está nas opções deste item."; return; }
   const it = itemPorId(S.item);
+  msg.textContent = "Lendo a página da loja…";
+  const { data } = await sb.functions.invoke("ler-produto", { body: { url } });
+  const nova = await salvar("opcoes", "insert", { item_id: S.item, ...opcaoDoLink(it.nome, url, data) });
+  S.opcoes.push(nova); S.novaOpcao = false; rascunho = false;
   if (it.status === "nao_iniciado") await atualizarItem(it.id, { status: "pesquisando" });
-  render(); toast("Opção adicionada");
+  render();
+  if (data?.produto) toast(nova.preco != null ? "Opção adicionada" : "Opção adicionada, sem preço na página");
+  else toast(MSG_LINK[data?.erro] ? `Opção salva só com o link. ${MSG_LINK[data.erro]}` : "Opção salva só com o link: não consegui ler a página.", true);
 }
 
 async function enviarComentario(form) {
@@ -356,7 +326,6 @@ const ACOES = {
   apagarOpcao: (el) => apagarOpcao(el.dataset.id),
   apagarComentario: (el) => apagarComentario(el.dataset.id),
   colarLink,
-  lerLink,
   acharMaisBarato,
 };
 
