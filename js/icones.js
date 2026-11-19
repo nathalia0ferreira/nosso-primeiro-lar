@@ -67,6 +67,7 @@ const D = {
   sacola: '<path d="M5 8h14l-1 13H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
   bolinha: '<circle cx="12" cy="12" r="8"/><path d="M9 9.5a3.5 3.5 0 0 1 3-1.5"/>',
   adesivo: '<path d="M5 4h14v9l-6 7H5z"/><path d="M13 20v-5a2 2 0 0 1 2-2h4"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
   casa: '<path d="M3 11l9-7 9 7M5 10v10h14V10M10 20v-6h4v6"/>',
 };
 

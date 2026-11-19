@@ -19,6 +19,8 @@
   --ease: cubic-bezier(.2,.7,.2,1);
   --serif: "Instrument Serif", Georgia, serif;
   --sans: "Inter", system-ui, -apple-system, sans-serif;
+  --nav-bg: rgba(22,22,21,.94);   /* fundo da barra e dos vidros; troca no tema claro */
+  --glass-btn: rgba(15,15,14,.75);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -184,7 +186,7 @@ textarea.input { min-height: 84px; resize: vertical; }
 .sheet-hero .ph { font-size: 96px; }
 .sheet-body { padding: 24px 28px 64px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
 .sheet-close { position: sticky; top: 0; z-index: 2; display: flex; justify-content: flex-end; padding: 12px; margin-bottom: -68px; pointer-events: none; }
-.sheet-close button { pointer-events: auto; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: rgba(15,15,14,.75); backdrop-filter: blur(10px); cursor: pointer; display: grid; place-items: center; color: var(--text); }
+.sheet-close button { pointer-events: auto; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--glass-btn); backdrop-filter: blur(10px); cursor: pointer; display: grid; place-items: center; color: var(--text); }
 @media (max-width: 900px) { .sheet { top: 6vh; border-left: 0; border-radius: 18px 18px 0 0; transform: translateY(100%); } .sheet-body { padding: 20px 16px 48px; } }
 
 .status-pick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
@@ -460,7 +462,7 @@ a.painel:active { transform: scale(.98); }
 .nav .nav-tab.on .nav-pill { background: var(--surface-2); }
 
 @media (max-width: 900px) {
-  .top .nav { position: fixed; z-index: 30; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); display: flex; justify-content: space-around; align-items: flex-end; gap: 2px; padding: 8px 6px; border: 1px solid var(--line-soft); border-radius: 30px; background: rgba(22,22,21,.94); backdrop-filter: blur(14px); touch-action: pan-y; }
+  .top .nav { position: fixed; z-index: 30; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); display: flex; justify-content: space-around; align-items: flex-end; gap: 2px; padding: 8px 6px; border: 1px solid var(--line-soft); border-radius: 30px; background: var(--nav-bg); backdrop-filter: blur(14px); touch-action: pan-y; }
   .nav .nav-tab { flex: 1; flex-direction: column; justify-content: flex-end; gap: 0; padding: 4px 2px; min-height: 48px; border-radius: 22px; font-size: 11px; }
   .nav .nav-tab .nav-pill { padding: 7px 16px; }
   .nav .nav-tab .nav-pill .ico { width: 22px; height: 22px; }
@@ -475,3 +477,55 @@ a.painel:active { transform: scale(.98); }
 .view { touch-action: pan-y; transition: transform .18s ease, opacity .18s ease; }
 .view.enter { transition: none; }
 .compare-wrap, .seg, .status-pick { touch-action: pan-x; }
+
+/* ── Tema claro ────────────────────────────────────────────
+   Mesmas variáveis do escuro, em papel quente. Vale quando o
+   usuário escolhe "Claro" (data-theme=light) e, no modo
+   "Sistema" (sem data-theme), quando o aparelho está no claro. */
+:root[data-theme="light"] {
+  --bg: #f4f1ea;
+  --surface: #faf8f3;
+  --surface-2: #ece7dc;
+  --line: #d8d2c4;
+  --line-soft: #e7e2d7;
+  --text: #272319;
+  --muted: #6c675b;
+  --faint: #a7a193;
+  --accent: #96815b;
+  --ok: #5f7a57;
+  --warn: #a86f49;
+  --danger-line: #d8c0a6;
+  --nav-bg: rgba(250,248,243,.9);
+  --glass-btn: rgba(250,248,243,.8);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+/* ── Tema claro ────────────────────────────────────────────
+   Mesmas variáveis do escuro, em papel quente. Vale quando o
+   usuário escolhe "Claro" (data-theme=light) e, no modo
+   "Sistema" (sem data-theme), quando o aparelho está no claro. */
+:root:not([data-theme="dark"]):not([data-theme="light"]) {
+  --bg: #f4f1ea;
+  --surface: #faf8f3;
+  --surface-2: #ece7dc;
+  --line: #d8d2c4;
+  --line-soft: #e7e2d7;
+  --text: #272319;
+  --muted: #6c675b;
+  --faint: #a7a193;
+  --accent: #96815b;
+  --ok: #5f7a57;
+  --warn: #a86f49;
+  --danger-line: #d8c0a6;
+  --nav-bg: rgba(250,248,243,.9);
+  --glass-btn: rgba(250,248,243,.8);
+  color-scheme: light;
+}
+}
+
+/* Configurações */
+.config-abrir { padding: 7px; display: inline-grid; place-items: center; border-radius: 10px; }
+.config-abrir .ico { width: 22px; height: 22px; display: block; }
+.config-form { display: grid; gap: var(--s4); max-width: 480px; }
+.config-tema { margin-top: var(--s2); }
+.config-sair { max-width: 480px; }

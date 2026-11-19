@@ -5,7 +5,7 @@ import { lerForm, toast } from "./ui.js";
 import { svg } from "./icones.js";
 import { acharPromo } from "./dominio.js";
 import { S, carregar, escolhidaDe, itemPorId, meuId, opcoesDe, ouvirMudancas, salvar, sb } from "./estado.js";
-import { itensListaHTML, painelItem, telaComodo, telaEsquecidos, telaEtapas, telaFinancas, telaInicio, telaLista, telaLogin, telaSemAcesso } from "./telas.js";
+import { itensListaHTML, painelItem, telaComodo, telaConfig, telaEsquecidos, telaEtapas, telaFinancas, telaInicio, telaLista, telaLogin, telaSemAcesso } from "./telas.js";
 
 const $app = document.getElementById("app");
 const ANIMACAO_PAINEL_MS = 300;
@@ -20,7 +20,7 @@ const ROTAS = {
   financas: ["Finanças", telaFinancas],
 };
 const ICONE_MENU = { inicio: "casa", lista: "checklist", esquecidos: "lampada", etapas: "calendario", financas: "carteira" };
-const PAGINAS = { ...ROTAS, comodo: ["Lista", telaComodo] }; // páginas internas que não aparecem no menu
+const PAGINAS = { ...ROTAS, comodo: ["Lista", telaComodo], config: ["Configurações", telaConfig] }; // páginas internas que não aparecem no menu
 /** "#comodo/Cozinha" vira { rota: "comodo", param: "Cozinha" }. */
 function rotaAtual() {
   const [base, ...resto] = location.hash.slice(1).split("/");
@@ -46,7 +46,7 @@ function render() {
     <header class="top${rota === "inicio" ? "" : " so-menu"}">
       <a class="brand" href="#inicio">Nosso Primeiro Lar</a>
       <nav class="nav" aria-label="Principal">${Object.entries(ROTAS).map(([k, [rotulo]]) => `<a href="#${k}" class="nav-tab ${k === menu ? "on" : ""}"${k === rota ? ' aria-current="page"' : ""}><span class="nav-pill">${svg(ICONE_MENU[k])}</span><span class="nav-lbl">${rotulo}</span></a>`).join("")}</nav>
-      <div class="who"><span>${esc(S.membros[meuId()] || "")}</span><button class="linkbtn" data-act="sair">Sair</button></div>
+      <div class="who"><span>${esc(S.membros[meuId()] || "")}</span><a class="linkbtn config-abrir" href="#config" aria-label="Configurações">${svg("menu")}</a></div>
     </header>
     <main class="view${entrou ? " enter" : ""}" id="view" tabindex="-1">${PAGINAS[rota][1](param)}</main>
   </div>${S.item ? painelItem() : ""}`;
@@ -134,14 +134,23 @@ async function otimista(aplicar, gravar, mensagem) {
   }
 }
 
-function salvarOrcamento() {
-  const valor = lerNumero(document.getElementById("orc").value);
-  const antes = S.config.orcamento_total;
+function salvarConfig(form) {
+  const d = lerForm(form);
+  const antes = { ...S.config };
+  const valores = { renda: lerNumero(d.renda), orcamento_total: lerNumero(d.orcamento_total), data_mudanca: d.data_mudanca || null };
   return otimista(
-    () => { S.config.orcamento_total = valor; return () => (S.config.orcamento_total = antes); },
-    () => salvar("config", "update", { orcamento_total: valor }, 1),
-    "Orçamento salvo",
+    () => { Object.assign(S.config, valores); return () => { S.config = antes; }; },
+    () => salvar("config", "update", valores, 1),
   );
+}
+
+/** Tema do app, guardado por aparelho: sistema (segue o celular), claro ou escuro. */
+function aplicarTema(valor) {
+  try { localStorage.setItem("tema", valor); } catch { /* modo privado */ }
+  const el = document.documentElement;
+  if (valor === "claro") el.dataset.theme = "light";
+  else if (valor === "escuro") el.dataset.theme = "dark";
+  else delete el.dataset.theme;
 }
 
 function apagarItem(it) {
@@ -302,7 +311,7 @@ async function enviarComentario(form) {
   S.comentarios.push(c); render();
 }
 
-const FORMULARIOS = { "form-item": enviarItem, "form-opcao": enviarOpcao, "form-comentario": enviarComentario };
+const FORMULARIOS = { "form-item": enviarItem, "form-opcao": enviarOpcao, "form-comentario": enviarComentario, "form-config": salvarConfig };
 
 /* ---------- eventos ---------- */
 const ACOES = {
@@ -314,7 +323,7 @@ const ACOES = {
   abaVistoria: (el) => { S.abaVistoria = el.dataset.v; render(); },
   filtro: (el) => { S.filtro[el.dataset.k] = el.dataset.v; render(); },
   finPor: (el) => { S.finPor = el.dataset.v; render(); },
-  salvarOrc: salvarOrcamento,
+  tema: (el) => { aplicarTema(el.dataset.v); render(); },
   status: (el, it) => atualizarItem(it.id, { status: el.dataset.v }, "Status atualizado"),
   apagarItem: (_el, it) => apagarItem(it),
   toggleOpcao: () => { S.novaOpcao = !S.novaOpcao; render(); },

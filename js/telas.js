@@ -178,6 +178,28 @@ export function telaEtapas() {
 }
 
 /* ---------- Finanças ---------- */
+/* ---------- Configurações ---------- */
+export function telaConfig() {
+  const c = S.config;
+  let tema = "sistema";
+  try { tema = localStorage.getItem("tema") || "sistema"; } catch { /* modo privado */ }
+  return `<a class="voltar" href="#inicio">${ICONES.voltar} Início</a>
+    <section class="hero page"><h1 class="display page-title">Configurações</h1></section>
+    <form id="form-config" class="section section-close config-form">
+      <label class="field full">Renda mensal do casal (R$)<input class="input" name="renda" inputmode="decimal" value="${numeroParaCampo(c.renda)}" placeholder="Ex.: 6000"></label>
+      <label class="field full">Orçamento total para a casa (R$)<input class="input" name="orcamento_total" inputmode="decimal" value="${numeroParaCampo(c.orcamento_total)}" placeholder="Ex.: 40000"></label>
+      <label class="field full">Data da mudança<input class="input" name="data_mudanca" type="date" value="${esc(c.data_mudanca || DATA_MUDANCA_PADRAO)}"></label>
+      <button class="btn self-start" type="submit">Salvar</button>
+    </form>
+    <section class="section">
+      <span class="eyebrow">Tema</span>
+      <div class="config-tema">${segmentos([["sistema", "Sistema"], ["claro", "Claro"], ["escuro", "Escuro"]], tema, 'data-act="tema"')}</div>
+    </section>
+    <section class="section config-sair">
+      <button class="btn ghost" data-act="sair">Sair da conta</button>
+    </section>`;
+}
+
 export function telaFinancas() {
   const t = resumoDe();
   const orc = S.config.orcamento_total;
@@ -187,17 +209,15 @@ export function telaFinancas() {
     .sort((a, b) => (chave === "comodo" ? ordemComodos.indexOf(a) - ordemComodos.indexOf(b) : a.localeCompare(b, "pt-BR")));
   const maiorValor = Math.max(orc || 0, t.estTotal, t.gasto, 1);
   const comOrcamento = (f) => (orc != null ? brl(f(orc)) : "—");
+  const renda = S.config.renda;
+  const prazo = contagemRegressiva(S.config.data_mudanca || DATA_MUDANCA_PADRAO);
+  const porMes = t.reservar / Math.max(prazo.meses, 1);
   return `<section class="hero page">${cabecalhoPagina("Planejamento financeiro", "Quanto custa o lar")}</section>
-    <section class="section section-close">
-      <div class="fields budget-form">
-        <label class="field">Orçamento total planejado (R$)<input class="input" inputmode="decimal" id="orc" value="${numeroParaCampo(orc)}" placeholder="Ex.: 40000"></label>
-        <button class="btn ghost self-start" data-act="salvarOrc">Salvar orçamento</button>
-      </div>
-    </section>
     <section class="section">
       <div class="stats">
         ${estatistica("Orçamento", brl(orc))}${estatistica("Estimado", brl(t.estTotal))}${estatistica("Gasto real", brl(t.gasto))}
         ${estatistica("Restante a comprar", brl(t.reservar))}${estatistica("Saldo do orçamento", comOrcamento((o) => o - t.gasto))}${estatistica("Folga prevista", comOrcamento((o) => o - t.gasto - t.reservar))}
+        ${estatistica("Renda do casal", brl(renda))}${estatistica("Guardar por mês", brl(porMes))}${estatistica("Da renda por mês", renda ? pct(porMes, renda) + "%" : "—")}
       </div>
       <div class="compare-bars">
         ${[["Orçamento", orc || 0], ["Estimado", t.estTotal], ["Gasto real", t.gasto]].map(([l, v]) => `<div><div class="between small"><span class="muted">${l}</span><span>${brl(v)}</span></div>${barra(pct(v, maiorValor))}</div>`).join("")}
