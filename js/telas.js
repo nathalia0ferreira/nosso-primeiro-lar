@@ -37,12 +37,10 @@ const miniPainel = (href, icone, rotulo, valor, p) => `<a class="painel mini" hr
     <span class="mini-topo"><span class="ico-box">${svg(icone)}</span>${p == null ? "" : anel(p)}</span>
     <span class="mini-rotulo">${rotulo}</span><span class="mini-valor">${valor}</span></a>`;
 
-function saudacao() {
-  const h = new Date().getHours();
-  const oi = h >= 5 && h < 12 ? "Bom dia" : h < 18 && h >= 12 ? "Boa tarde" : "Boa noite";
-  const nome = (S.membros[meuId()] || "").split(" ")[0];
+/** Data de hoje no topo do Início. */
+function dataDeHoje() {
   const hoje = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
-  return `<header class="saudacao"><span class="muted">${esc(hoje[0].toUpperCase() + hoje.slice(1))}</span><h1 class="saudacao-titulo">${oi}${nome ? `, ${esc(nome)}` : ""}</h1></header>`;
+  return `<header class="saudacao"><span class="muted">${esc(hoje[0].toUpperCase() + hoje.slice(1))}</span></header>`;
 }
 
 export function telaInicio() {
@@ -54,7 +52,7 @@ export function telaInicio() {
   const vistoria = S.itens.filter(ehVistoria);
   const conta = (lista) => lista.filter(comprado).length;
   const totalPrevisto = t.gasto + t.reservar;
-  return `${saudacao()}
+  return `${dataDeHoje()}
     <section class="painel destaque">
       <span class="eyebrow">Mudança em ${esc(mes)}</span>
       <div class="destaque-num">${c.dias.toLocaleString("pt-BR")} <small>dias</small></div>
