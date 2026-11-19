@@ -158,7 +158,7 @@ export function telaEsquecidos() {
   const lista = S.itens.filter((i) => i.esquecido).sort(pendentesPrimeiro);
   const feitos = lista.filter(comprado).length;
   return `<section class="hero page">
-    ${cabecalhoPagina("Os pequenos essenciais", "O que sempre esquecem", "Não adianta ter geladeira sem ter talheres. Estes são os itens pequenos que fazem falta já na primeira noite. Marque qualquer item como “esquecível” no detalhe dele para que apareça aqui.")}
+    <h1 class="display page-title">Pequenos essenciais</h1>
     <div class="progress-box">${progresso(`${feitos} de ${lista.length} garantidos`, feitos, lista.length)}</div>
   </section>
   <section class="section section-near"><div class="check-list">${lista.map(linhaItem).join("") || `<p class="empty padded">Nenhum item marcado.</p>`}</div></section>`;
