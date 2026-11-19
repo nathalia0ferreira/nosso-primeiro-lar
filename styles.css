@@ -287,3 +287,21 @@ textarea.input { min-height: 84px; resize: vertical; }
 .photo .ph .ico { width: 48px; height: 48px; color: var(--muted); display: block; }
 .photo.thumb .ph .ico { width: 26px; height: 26px; }
 .photo.sheet-hero .ph .ico { width: 88px; height: 88px; stroke-width: 1.1; }
+
+/* Lista em páginas: cartões de cômodo e página de cada cômodo */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--s3); margin-top: var(--s5); }
+@media (max-width: 520px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { display: grid; gap: var(--s2); align-content: start; padding: var(--s4); min-height: 148px; background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--radius); text-decoration: none; transition: border-color .2s, transform .2s; }
+.tile:hover { border-color: var(--line); }
+.tile:active { transform: scale(.98); }
+.tile-ico .ico, .comodo-ico .ico { width: 30px; height: 30px; color: var(--accent); display: block; }
+.tile-nome { font-family: var(--serif); font-size: 22px; line-height: 1.15; overflow-wrap: anywhere; }
+.tile .bar { margin-top: auto; }
+.voltar { display: inline-flex; align-items: center; gap: var(--s1); margin-top: var(--s5); padding: var(--s2) var(--s3) var(--s2) var(--s1); min-height: 44px; color: var(--muted); text-decoration: none; border-radius: 999px; }
+.voltar:hover { color: var(--text); }
+.comodo-hero { padding-top: var(--s4); }
+.comodo-ico .ico { width: 36px; height: 36px; }
+.grupo-comodo { margin-top: var(--s7); }
+.grupo-comodo:first-child { margin-top: var(--s5); }
+.grupo-titulo { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); text-decoration: none; padding-bottom: var(--s2); border-bottom: 1px solid var(--line-soft); }
+.grupo-titulo .chev { transform: rotate(-90deg); }

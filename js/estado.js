@@ -14,7 +14,7 @@ export const S = {
   session: null, souMembro: false,
   membros: {}, itens: [], opcoes: [], comentarios: [], config: {},
   // estado só da interface
-  abertos: new Set(), filtro: { q: "", status: "todos", prio: "todas" }, finPor: "comodo", item: null, novaOpcao: false,
+  listaModo: "comodos", comodoAtual: null, filtro: { q: "", status: "todos", prio: "todas" }, finPor: "comodo", item: null, novaOpcao: false,
 };
 
 /* ---------- consultas ao estado ---------- */

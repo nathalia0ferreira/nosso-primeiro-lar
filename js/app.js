@@ -4,7 +4,7 @@ import { esc, lerNumero, numeroParaCampo, textoOuNulo, urlOk } from "./formato.j
 import { lerForm, toast } from "./ui.js";
 import { acharPromo } from "./dominio.js";
 import { S, carregar, escolhidaDe, itemPorId, meuId, opcoesDe, ouvirMudancas, salvar, sb } from "./estado.js";
-import { comodosHTML, painelItem, telaEsquecidos, telaEtapas, telaFinancas, telaInicio, telaLista, telaLogin, telaSemAcesso } from "./telas.js";
+import { itensListaHTML, painelItem, telaComodo, telaEsquecidos, telaEtapas, telaFinancas, telaInicio, telaLista, telaLogin, telaSemAcesso } from "./telas.js";
 
 const $app = document.getElementById("app");
 const ANIMACAO_PAINEL_MS = 300;
@@ -18,26 +18,37 @@ const ROTAS = {
   etapas: ["Etapas", telaEtapas],
   financas: ["Finanças", telaFinancas],
 };
-const rotaAtual = () => (location.hash.slice(1) in ROTAS ? location.hash.slice(1) : "inicio");
+const PAGINAS = { ...ROTAS, comodo: ["Lista", telaComodo] }; // páginas internas que não aparecem no menu
+/** "#comodo/Cozinha" vira { rota: "comodo", param: "Cozinha" }. */
+function rotaAtual() {
+  const [base, ...resto] = location.hash.slice(1).split("/");
+  const rota = base in PAGINAS ? base : "inicio";
+  let param = null;
+  try { param = resto.length ? decodeURIComponent(resto.join("/")) : null; } catch { /* endereço malformado */ }
+  return { rota, param };
+}
 
 let rotaAnterior = null;
 function render() {
   if (!S.session) return renderLogin();
   if (!S.souMembro) { $app.innerHTML = telaSemAcesso(); return; }
-  const rota = rotaAtual();
-  const entrou = rota !== rotaAnterior; // anima só ao trocar de página, não a cada atualização
-  rotaAnterior = rota;
+  const { rota, param } = rotaAtual();
+  const menu = rota === "comodo" ? "lista" : rota;
+  S.comodoAtual = rota === "comodo" ? param : null;
+  const chaveRota = `${rota}/${param ?? ""}`;
+  const entrou = chaveRota !== rotaAnterior; // anima só ao trocar de página, não a cada atualização
+  rotaAnterior = chaveRota;
   const painelAntes = document.querySelector(".sheet.show");
   const rolagemPainel = painelAntes?.scrollTop ?? 0;
   $app.innerHTML = `<a class="skip" href="#view">Pular para o conteúdo</a><div class="shell">
     <header class="top">
       <a class="brand" href="#inicio">Nosso Primeiro Lar</a>
-      <nav class="nav" aria-label="Principal">${Object.entries(ROTAS).map(([k, [rotulo]]) => `<a href="#${k}" class="${k === rota ? "on" : ""}"${k === rota ? ' aria-current="page"' : ""}>${rotulo}</a>`).join("")}</nav>
+      <nav class="nav" aria-label="Principal">${Object.entries(ROTAS).map(([k, [rotulo]]) => `<a href="#${k}" class="${k === menu ? "on" : ""}"${k === rota ? ' aria-current="page"' : ""}>${rotulo}</a>`).join("")}</nav>
       <div class="who"><span>${esc(S.membros[meuId()] || "")}</span><button class="linkbtn" data-act="sair">Sair</button></div>
     </header>
-    <main class="view${entrou ? " enter" : ""}" id="view" tabindex="-1">${ROTAS[rota][1]()}</main>
+    <main class="view${entrou ? " enter" : ""}" id="view" tabindex="-1">${PAGINAS[rota][1](param)}</main>
   </div>${S.item ? painelItem() : ""}`;
-  document.title = `${ROTAS[rota][0]} · Nosso Primeiro Lar`;
+  document.title = `${param ?? PAGINAS[rota][0]} · Nosso Primeiro Lar`;
   if (!S.item) return;
   const partes = document.querySelectorAll(".overlay,.sheet");
   if (painelAntes) { // painel já estava aberto: mantém posição, sem animar de novo
@@ -268,13 +279,6 @@ async function lerLink() {
   msg.textContent = `Dados de ${data.loja} preenchidos${p.preco == null || !emReais ? ", sem preço" : ""}. Confira, informe o frete se souber e salve.`;
 }
 
-function alternarComodo(el) {
-  const c = el.dataset.c;
-  S.abertos.has(c) ? S.abertos.delete(c) : S.abertos.add(c);
-  el.closest(".room").classList.toggle("open");
-  el.setAttribute("aria-expanded", S.abertos.has(c));
-}
-
 /* ---------- formulários ---------- */
 function dadosDoItem(d) {
   return {
@@ -294,7 +298,7 @@ async function enviarItem(form) {
     await atualizarItem(id, valores, "Alterações salvas");
   } else {
     const novo = await salvar("itens", "insert", { ...valores, ordem: ORDEM_ITEM_NOVO });
-    S.itens.push(novo); S.item = id = novo.id; S.abertos.add(novo.comodo);
+    S.itens.push(novo); S.item = id = novo.id;
     render(); toast("Item adicionado");
   }
   const it = itemPorId(id);
@@ -337,8 +341,7 @@ const ACOES = {
   abrir: (el) => abrirPainel(el.dataset.id),
   novo: () => abrirPainel("novo"),
   fechar: () => fecharPainel(),
-  room: alternarComodo,
-  irComodo: (el) => S.abertos.add(el.dataset.c),
+  listaModo: (el) => { S.listaModo = el.dataset.v; render(); },
   filtro: (el) => { S.filtro[el.dataset.k] = el.dataset.v; render(); },
   finPor: (el) => { S.finPor = el.dataset.v; render(); },
   salvarOrc: salvarOrcamento,
@@ -370,7 +373,7 @@ $app.addEventListener("input", (e) => {
   if (e.target.closest(".sheet form")) rascunho = true;
   if (e.target.dataset.act !== "busca") return;
   S.filtro.q = e.target.value;
-  document.getElementById("rooms").innerHTML = comodosHTML(); // sem render() para não perder o foco da busca
+  document.getElementById("rooms").innerHTML = itensListaHTML(S.comodoAtual); // sem render() para não perder o foco da busca
 });
 
 $app.addEventListener("submit", async (e) => {

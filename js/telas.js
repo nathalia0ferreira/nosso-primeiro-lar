@@ -1,8 +1,8 @@
 // Geração do HTML de cada tela. Só lê o estado; ações ficam em app.js.
-import { ETAPAS, ITEM_NOVO, ehVistoria, ORDEM_PRIORIDADE, PRIORIDADES, QTD_PRIORITARIOS, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
+import { ETAPAS, ITEM_NOVO, VISTORIA, ehVistoria, ORDEM_PRIORIDADE, PRIORIDADES, QTD_PRIORITARIOS, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
 import { comprado, contagemRegressiva, maisBarata, prioritarios, resumo, totalOpcao } from "./calculos.js";
 import { brl, dataBR, esc, numeroParaCampo, pct } from "./formato.js";
-import { iconeDoItem } from "./icones.js";
+import { iconeDoComodo, iconeDoItem } from "./icones.js";
 import { ICONES, barra, cabecalhoPagina, foto, linkExterno, progresso, segmentos } from "./ui.js";
 import { S, comodos, estimadoDe, fotoDe, itemPorId, meuId, nomeDe, opcoesDe } from "./estado.js";
 
@@ -69,7 +69,7 @@ export function telaInicio() {
       <div class="section-head"><div><span class="eyebrow">Por cômodo</span><h2 class="h2">Andamento</h2></div></div>
       <div class="fin">${comodos().map((cm) => {
         const tc = resumoDe(S.itens.filter((i) => i.comodo === cm));
-        return `<a class="fin-row fin-link" href="#lista" data-act="irComodo" data-c="${esc(cm)}"><span>${esc(cm)}</span><span class="muted small">${tc.comprados} de ${tc.total}</span>${barra(pct(tc.comprados, tc.total), "thin")}</a>`;
+        return `<a class="fin-row fin-link" href="${linkComodo(cm)}"><span>${esc(cm)}</span><span class="muted small">${tc.comprados} de ${tc.total}</span>${barra(pct(tc.comprados, tc.total), "thin")}</a>`;
       }).join("")}</div>
     </section>`;
 }
@@ -82,35 +82,67 @@ function filtrar(lista) {
   return lista.filter((i) => (!busca || `${i.nome} ${i.categoria}`.toLowerCase().includes(busca)) && passaStatus(i) && (prio === "todas" || i.prioridade === prio));
 }
 
-export function comodoHTML(cm) {
-  const todos = S.itens.filter((i) => i.comodo === cm);
-  const lista = filtrar(todos);
-  const t = resumoDe(todos);
-  const aberto = S.abertos.has(cm) || (S.filtro.q && lista.length);
+const linkComodo = (cm) => `#comodo/${encodeURIComponent(cm)}`;
+
+/** Itens já filtrados, agrupados por categoria. */
+function porCategoria(lista) {
+  if (!lista.length) return `<p class="empty">Nenhum item com esses filtros.</p>`;
   const categorias = [...new Set(lista.map((i) => i.categoria))];
-  return `<div class="room ${aberto ? "open" : ""}" role="region" aria-label="${esc(cm)}">
-    <button class="room-head" data-act="room" data-c="${esc(cm)}" aria-expanded="${!!aberto}">
-      <span class="h2">${esc(cm)}</span>
-      <span class="row"><span class="muted small" aria-label="${t.comprados} de ${t.total} comprados">${t.comprados}/${t.total}</span>${ICONES.chev}</span>
-      ${barra(pct(t.comprados, t.total), "thin")}
-    </button>
-    <div class="room-body"><div><div class="room-inner">
-      ${lista.length ? categorias.map((c) => `<div class="eyebrow cat-title">${esc(c)}</div><div class="check-list">${lista.filter((i) => i.categoria === c).map(linhaItem).join("")}</div>`).join("") : `<p class="empty">Nenhum item com esses filtros.</p>`}
-    </div></div></div></div>`;
+  return categorias.map((c) => `<div class="eyebrow cat-title">${esc(c)}</div><div class="check-list">${lista.filter((i) => i.categoria === c).map(linhaItem).join("")}</div>`).join("");
 }
 
-export const comodosHTML = () => comodos().map(comodoHTML).join("");
+/** Conteúdo filtrado da lista: um cômodo só, ou todos juntos (aba "Tudo"). Atualizado direto pela busca. */
+export function itensListaHTML(cm) {
+  if (cm) return porCategoria(filtrar(S.itens.filter((i) => i.comodo === cm)));
+  const blocos = comodos().map((c) => [c, filtrar(S.itens.filter((i) => i.comodo === c))]).filter(([, l]) => l.length);
+  if (!blocos.length) return `<p class="empty">Nenhum item com esses filtros.</p>`;
+  return blocos.map(([c, l]) => `<section class="grupo-comodo"><a class="grupo-titulo" href="${linkComodo(c)}"><h2 class="h2">${esc(c)}</h2>${ICONES.chev}</a>${porCategoria(l)}</section>`).join("");
+}
+
+const filtros = (comPrioridade) => {
+  const f = S.filtro;
+  return `<div class="toolbar">
+      <input class="input" type="search" placeholder="Buscar item" value="${esc(f.q)}" data-act="busca" aria-label="Buscar item">
+      ${segmentos([["todos", "Todos"], ["pendentes", "Pendentes"], ["comprados", "Feitos"]], f.status, 'data-act="filtro" data-k="status"')}
+      ${comPrioridade ? segmentos([["todas", "Todas"], ["essencial", "Essenciais"], ["importante", "Importantes"], ["complementar", "Complementares"]], f.prio, 'data-act="filtro" data-k="prio"') : ""}
+    </div>`;
+};
+
+function cartaoComodo(cm) {
+  const t = resumo(S.itens.filter((i) => i.comodo === cm), S.opcoes);
+  return `<a class="tile" href="${linkComodo(cm)}">
+      <span class="tile-ico">${iconeDoComodo(cm)}</span>
+      <span class="tile-nome">${esc(cm)}</span>
+      <span class="small muted">${t.comprados} de ${t.total} ${cm === VISTORIA ? "conferidos" : "comprados"}</span>
+      ${barra(pct(t.comprados, t.total), "thin")}
+    </a>`;
+}
 
 export function telaLista() {
-  const f = S.filtro;
-  return `<section class="hero page">${cabecalhoPagina("Lista de compras", "Cômodo por cômodo")}</section>
-    <div class="toolbar">
-      <input class="input" type="search" placeholder="Buscar item" value="${esc(f.q)}" data-act="busca" aria-label="Buscar item">
-      ${segmentos([["todos", "Todos"], ["pendentes", "Pendentes"], ["comprados", "Comprados"]], f.status, 'data-act="filtro" data-k="status"')}
-      ${segmentos([["todas", "Todas"], ["essencial", "Essenciais"], ["importante", "Importantes"], ["complementar", "Complementares"]], f.prio, 'data-act="filtro" data-k="prio"')}
-      <button class="btn sm" data-act="novo">Adicionar item</button>
-    </div>
-    <div class="rooms" id="rooms">${comodosHTML()}</div>`;
+  const modo = S.listaModo;
+  return `<section class="hero page">${cabecalhoPagina("Lista de compras", "Nossa lista")}</section>
+    <div class="toolbar">${segmentos([["comodos", "Por cômodo"], ["tudo", "Tudo"]], modo, 'data-act="listaModo"')}
+      <button class="btn sm" data-act="novo">Adicionar item</button></div>
+    ${modo === "tudo"
+      ? `${filtros(true)}<div class="rooms" id="rooms">${itensListaHTML(null)}</div>`
+      : `<div class="tiles">${comodos().map(cartaoComodo).join("")}</div>`}`;
+}
+
+/** Página de um cômodo: só os itens dele, por categoria. */
+export function telaComodo(cm) {
+  if (!comodos().includes(cm)) return `<p class="empty">Cômodo não encontrado. <a href="#lista">Voltar para a lista</a></p>`;
+  const todos = S.itens.filter((i) => i.comodo === cm);
+  const t = resumo(todos, S.opcoes);
+  const vistoria = cm === VISTORIA;
+  return `<a class="voltar" href="#lista">${ICONES.voltar} Lista</a>
+    <section class="hero page comodo-hero">
+      <span class="comodo-ico">${iconeDoComodo(cm)}</span>
+      ${cabecalhoPagina(vistoria ? "Checklist" : "Cômodo", esc(cm))}
+      <div class="progress-box">${progresso(`${t.comprados} de ${t.total} ${vistoria ? "conferidos" : "comprados"}`, t.comprados, t.total)}</div>
+    </section>
+    <div class="toolbar"><button class="btn sm" data-act="novo">Adicionar item</button></div>
+    ${filtros(!vistoria)}
+    <div class="rooms" id="rooms">${itensListaHTML(cm)}</div>`;
 }
 
 /* ---------- Esquecidos ---------- */
@@ -276,7 +308,7 @@ function secaoComentarios(it) {
 /** Painel lateral (ou inferior, no celular) com o item aberto; "" se não houver item. */
 export function painelItem() {
   const novo = S.item === "novo";
-  const it = novo ? ITEM_NOVO : itemPorId(S.item);
+  const it = novo ? { ...ITEM_NOVO, comodo: S.comodoAtual || ITEM_NOVO.comodo } : itemPorId(S.item);
   if (!it) { S.item = null; return ""; }
   return `<div class="overlay" data-act="fechar"></div>
   <aside class="sheet" role="dialog" aria-modal="true" aria-label="${esc(it.nome || "Novo item")}">

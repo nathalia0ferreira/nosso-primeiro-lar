@@ -90,6 +90,9 @@ const REGRAS = [
   [/eletrodomest/, "geladeira"], [/movei/, "sofa"],
 ];
 
+const POR_COMODO = { cozinha: "fogao", quarto: "cama", banheiro: "chuveiro", sala: "sofa", lavanderia: "lavar",
+  "organizacao e utilidades": "caixa", decoracao: "planta", "vistoria do apartamento": "checklist" };
+
 const normalizar = (s) => String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
 /** Nome do ícone para o item: tenta o nome, depois a categoria, depois o cômodo; senão, a casinha. */
@@ -105,3 +108,9 @@ export function nomeDoIcone(item) {
 
 export const iconeDoItem = (item) =>
   `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${D[nomeDoIcone(item)]}</svg>`;
+
+const svg = (nome) =>
+  `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${D[nome]}</svg>`;
+
+/** Ícone do cartão do cômodo; cômodos criados pelos usuários usam a regra dos itens (ou a casinha). */
+export const iconeDoComodo = (cm) => svg(POR_COMODO[normalizar(cm)] ?? nomeDoIcone({ nome: cm, categoria: "", comodo: "" }));
