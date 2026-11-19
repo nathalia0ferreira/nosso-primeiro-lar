@@ -2,7 +2,7 @@
   "hosting": {
     "public": ".",
     "ignore": [
-      "firebase.json", ".firebaserc", "**/.*", "**/node_modules/**",
+      "firebase.json", ".firebaserc", "**/.*", "**/.*/**", "**/node_modules/**",
       "tests/**", "supabase/**", "scripts/**", "RELATORIO_AUDITORIA_SEGURANCA.md"
     ],
     "headers": [
