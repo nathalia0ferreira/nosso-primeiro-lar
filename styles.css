@@ -447,3 +447,26 @@ a.painel:active { transform: scale(.98); }
   .paineis { margin-top: 8px; }
   .paineis .painel { min-height: 0; }
 }
+
+/* ── Barra de navegação em cápsula ─────────────────────────
+   Forma arredondada; a aba atual fica marcada por uma cápsula,
+   o nome aparece sob o ícone só com o dedo (ou o mouse) nela. */
+.nav { position: relative; }
+.nav .nav-tab { position: relative; text-decoration: none; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; transition: color .2s; -webkit-tap-highlight-color: transparent; }
+.nav .nav-tab .nav-pill { display: inline-grid; place-items: center; padding: 6px 12px; border-radius: 999px; transition: background .25s, transform .2s; }
+.nav .nav-tab .nav-pill .ico { width: 18px; height: 18px; display: block; }
+.nav .nav-tab:hover { color: var(--text); }
+.nav .nav-tab.on { color: var(--text); }
+.nav .nav-tab.on .nav-pill { background: var(--surface-2); }
+
+@media (max-width: 900px) {
+  .top .nav { position: fixed; z-index: 30; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); display: flex; justify-content: space-around; align-items: flex-end; gap: 2px; padding: 8px 6px; border: 1px solid var(--line-soft); border-radius: 30px; background: rgba(22,22,21,.94); backdrop-filter: blur(14px); touch-action: pan-y; }
+  .nav .nav-tab { flex: 1; flex-direction: column; justify-content: flex-end; gap: 0; padding: 4px 2px; min-height: 48px; border-radius: 22px; font-size: 11px; }
+  .nav .nav-tab .nav-pill { padding: 7px 16px; }
+  .nav .nav-tab .nav-pill .ico { width: 22px; height: 22px; }
+  /* nome escondido; cresce sob o ícone com o dedo (data-touch) ou o mouse */
+  .nav .nav-tab .nav-lbl { max-height: 0; opacity: 0; overflow: hidden; transition: max-height .2s, opacity .2s, margin-top .2s; }
+  .nav .nav-tab[data-touch] .nav-lbl, .nav .nav-tab:hover .nav-lbl { max-height: 16px; opacity: 1; margin-top: 2px; }
+  .nav .nav-tab.on .nav-pill { background: var(--surface-2); }
+  .nav .nav-tab[data-touch] .nav-pill { transform: scale(1.06); }
+}

@@ -45,7 +45,7 @@ function render() {
   $app.innerHTML = `<a class="skip" href="#view">Pular para o conteúdo</a><div class="shell">
     <header class="top${rota === "inicio" ? "" : " so-menu"}">
       <a class="brand" href="#inicio">Nosso Primeiro Lar</a>
-      <nav class="nav" aria-label="Principal">${Object.entries(ROTAS).map(([k, [rotulo]]) => `<a href="#${k}" class="${k === menu ? "on" : ""}"${k === rota ? ' aria-current="page"' : ""}>${svg(ICONE_MENU[k])}<span>${rotulo}</span></a>`).join("")}</nav>
+      <nav class="nav" aria-label="Principal">${Object.entries(ROTAS).map(([k, [rotulo]]) => `<a href="#${k}" class="nav-tab ${k === menu ? "on" : ""}"${k === rota ? ' aria-current="page"' : ""}><span class="nav-pill">${svg(ICONE_MENU[k])}</span><span class="nav-lbl">${rotulo}</span></a>`).join("")}</nav>
       <div class="who"><span>${esc(S.membros[meuId()] || "")}</span><button class="linkbtn" data-act="sair">Sair</button></div>
     </header>
     <main class="view${entrou ? " enter" : ""}" id="view" tabindex="-1">${PAGINAS[rota][1](param)}</main>
@@ -356,6 +356,42 @@ $app.addEventListener("submit", async (e) => {
   botao.disabled = true;
   try { await enviar(e.target); liberarRender(); } catch { /* salvar() já avisou o usuário */ } finally { botao.disabled = false; }
 });
+
+/* ---------- barra de navegação: arrastar o dedo escolhe a aba ----------
+   O nome aparece sob o ícone enquanto o dedo está nela e some ao soltar;
+   a aba escolhida é a que estiver sob o dedo quando ele levanta. */
+let navArrastando = false, navEscolheu = false;
+const navAbaEm = (nav, x) => [...nav.querySelectorAll(".nav-tab")].reduce((best, a) => {
+  const b = a.getBoundingClientRect();
+  const d = Math.abs(x - (b.left + b.width / 2));
+  return !best || d < best.d ? { a, d } : best;
+}, null)?.a;
+const navMarcar = (nav, aba) => nav.querySelectorAll(".nav-tab").forEach((t) => t.toggleAttribute("data-touch", t === aba));
+const navLimpar = () => { navArrastando = false; document.querySelectorAll(".nav-tab[data-touch]").forEach((t) => t.removeAttribute("data-touch")); };
+document.addEventListener("pointerdown", (e) => {
+  const nav = e.target.closest?.(".nav");
+  if (!nav || e.pointerType === "mouse") return; // o mouse usa hover e clique normais
+  navArrastando = true; navMarcar(nav, navAbaEm(nav, e.clientX));
+});
+document.addEventListener("pointermove", (e) => {
+  if (!navArrastando) return;
+  const nav = document.querySelector(".nav");
+  if (nav) navMarcar(nav, navAbaEm(nav, e.clientX));
+});
+document.addEventListener("pointerup", (e) => {
+  if (!navArrastando) return;
+  const nav = document.querySelector(".nav");
+  const aba = nav && navAbaEm(nav, e.clientX);
+  navLimpar();
+  if (aba) { navEscolheu = true; location.hash = aba.getAttribute("href"); }
+});
+document.addEventListener("pointercancel", navLimpar);
+// o clique que o navegador manda após o toque mira a aba onde o dedo encostou primeiro: ignora, a escolha já foi no soltar
+document.addEventListener("click", (e) => {
+  if (!navEscolheu) return;
+  navEscolheu = false;
+  if (e.target.closest?.(".nav")) { e.preventDefault(); e.stopPropagation(); }
+}, true);
 
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && S.item) fecharPainel(); });
 window.addEventListener("hashchange", () => {
