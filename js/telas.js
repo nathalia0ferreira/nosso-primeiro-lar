@@ -127,8 +127,7 @@ function cartaoComodo(cm) {
 export function telaLista() {
   const modo = S.listaModo;
   return `<section class="hero page">${cabecalhoPagina("Lista de compras", "Nossa lista")}</section>
-    <div class="toolbar">${segmentos([["comodos", "Por cômodo"], ["tudo", "Tudo"]], modo, 'data-act="listaModo"')}
-      <button class="btn sm" data-act="novo">Adicionar item</button></div>
+    <div class="toolbar">${segmentos([["comodos", "Por cômodo"], ["tudo", "Tudo"]], modo, 'data-act="listaModo"')}</div>
     ${modo === "tudo"
       ? `${filtros(true)}<div class="rooms" id="rooms">${itensListaHTML(null)}</div>`
       : `<div class="tiles">${comodos().map(cartaoComodo).join("")}</div>`}`;
