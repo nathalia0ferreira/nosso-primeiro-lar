@@ -60,18 +60,16 @@ export function telaInicio() {
       <div class="linha"><span class="muted">Compras feitas</span><b>${t.comprados} de ${t.total}</b></div>
       <div class="linha caixa-linha"><span class="muted">Ainda reservar</span><b class="destaque-valor">${brl(t.reservar)}</b></div>
     </section>
-    <h2 class="eyebrow secao-painel">Resumo</h2>
     <a class="painel financeiro" href="#financas">
       <span class="mini-topo"><span class="ico-box">${svg("carteira")}</span><span><span class="mini-rotulo">Total estimado</span><span class="mini-valor">${brl(t.estTotal)}</span></span></span>
       <span class="barra-dupla" aria-hidden="true"><i class="gasto" style="flex:${t.gasto || 0}"></i><i class="falta" style="flex:${t.reservar || 0}"></i></span>
       <span class="linha-legenda"><span><i class="ponto gasto"></i>Gasto ${brl(t.gasto)}</span><span><i class="ponto falta"></i>Falta ${brl(t.reservar)}</span></span>
-      ${t.semPreco ? `<span class="small muted">${t.semPreco} ${plural(t.semPreco, "item ainda sem preço", "itens ainda sem preço")}</span>` : ""}
     </a>
     <div class="paineis">
       ${miniPainel("#lista", "sacola", "Compras", `${t.comprados} de ${t.total}`, pct(t.comprados, t.total))}
-      ${miniPainel("#financas", "carteira", "Orçamento usado", orc ? brl(t.gasto) : "Sem orçamento", orc ? pct(t.gasto, orc) : null)}
-      ${miniPainel("#esquecidos", "lampada", "Esquecidos garantidos", `${conta(esquecidos)} de ${esquecidos.length}`, pct(conta(esquecidos), esquecidos.length))}
-      ${miniPainel(linkComodo(VISTORIA), "checklist", "Vistoria conferida", `${conta(vistoria)} de ${vistoria.length}`, pct(conta(vistoria), vistoria.length))}
+      ${miniPainel("#financas", "carteira", "Orçamento", orc ? brl(t.gasto) : "Sem orçamento", orc ? pct(t.gasto, orc) : null)}
+      ${miniPainel("#esquecidos", "lampada", "Esquecidos", `${conta(esquecidos)} de ${esquecidos.length}`, pct(conta(esquecidos), esquecidos.length))}
+      ${miniPainel(linkComodo(VISTORIA), "checklist", "Vistoria", `${conta(vistoria)} de ${vistoria.length}`, pct(conta(vistoria), vistoria.length))}
     </div>
     <h2 class="eyebrow secao-painel">Por cômodo</h2>
     <div class="painel lista-painel">${comodos().filter((cm) => cm !== VISTORIA).map((cm) => {

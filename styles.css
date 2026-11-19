@@ -418,3 +418,32 @@ a.painel:active { transform: scale(.98); }
 .titulo-linha .page-title { font-size: clamp(21px, 5.6vw, 40px); white-space: nowrap; }
 .titulo-linha .seg { flex-wrap: nowrap; flex: none; }
 .titulo-linha .seg button { padding: 7px 10px; }
+
+/* Início: tudo até "Por cômodo" cabe sem rolar (telas pequenas) */
+@media (max-width: 900px) {
+  .saudacao { padding: var(--s1) 0 var(--s2); }
+  .painel.destaque { padding: var(--s3) var(--s4); gap: var(--s1); }
+  .destaque-num { font-size: 34px; margin: 2px 0; }
+  .destaque .linha { padding: 6px 0; font-size: 13.5px; }
+  .caixa-linha { padding: 7px var(--s3); margin-top: 4px; }
+  .secao-painel { margin: var(--s3) 0 var(--s2); }
+  .painel.financeiro { padding: var(--s3) var(--s4); gap: var(--s2); }
+  .financeiro .mini-valor { font-size: 19px; }
+  .ico-box { width: 32px; height: 32px; }
+  .ico-box .ico { width: 17px; height: 17px; }
+  .paineis { gap: 8px; margin-top: 8px; }
+  .paineis .painel { padding: 10px 12px; gap: 4px; }
+  .paineis .mini-valor { font-size: 17px; }
+  .paineis .mini-rotulo { font-size: 12px; }
+  .anel { width: 38px; height: 38px; }
+  .anel b { font-size: 10px; }
+}
+
+/* Início: aperto final para caber em telas de ~740px */
+@media (max-width: 900px) {
+  .painel.financeiro { margin-top: var(--s2); }
+  .financeiro .small.muted { font-size: 12px; }
+  .destaque .linha { padding: 5px 0; }
+  .paineis { margin-top: 8px; }
+  .paineis .painel { min-height: 0; }
+}
