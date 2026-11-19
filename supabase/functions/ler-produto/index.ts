@@ -3,7 +3,7 @@
 // não pode apontar para rede interna; tempo e tamanho limitados; só responde a quem é membro.
 import { extrairProduto, ipPrivado, lojaDoLink } from "./extrair.ts";
 
-const ORIGENS = ["https://nathalia0ferreira.github.io", "http://localhost:5173"];
+const ORIGENS = ["https://nosso-primeiro-lar.web.app", "https://nosso-primeiro-lar.firebaseapp.com", "https://nathalia0ferreira.github.io", "http://localhost:5173"];
 const MAX_REDIRECIONAMENTOS = 4;
 const MAX_BYTES = 2_500_000;
 const TEMPO_MS = 9000;
