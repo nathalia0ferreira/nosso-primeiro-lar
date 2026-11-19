@@ -105,7 +105,6 @@ async function atualizarItem(id, valores, mensagem) {
   try {
     Object.assign(it, await salvar("itens", "update", valores, id));
     render();
-    if (mensagem) toast(mensagem);
   } catch {
     Object.assign(it, antes); render();
   }
@@ -129,7 +128,6 @@ async function otimista(aplicar, gravar, mensagem) {
   render();
   try {
     await gravar();
-    if (mensagem) toast(mensagem);
   } catch {
     desfazer();
     render();
@@ -270,7 +268,7 @@ async function enviarItem(form) {
   } else {
     const novo = await salvar("itens", "insert", { ...valores, ordem: ORDEM_ITEM_NOVO });
     S.itens.push(novo); S.item = id = novo.id;
-    render(); toast("Item adicionado");
+    render();
   }
   const it = itemPorId(id);
   if (it?.link_produto && (it.link_produto !== linkAntes || !it.imagem_url)) fotoDoLink(it);
@@ -280,7 +278,7 @@ async function enviarItem(form) {
 async function fotoDoLink(it) {
   const { data } = await sb.functions.invoke("ler-produto", { body: { url: it.link_produto } });
   const imagem = data?.produto?.imagem;
-  if (imagem) return atualizarItem(it.id, { imagem_url: imagem }, "Foto do produto atualizada");
+  if (imagem) return atualizarItem(it.id, { imagem_url: imagem });
   toast("Não consegui pegar a foto dessa página.", true);
 }
 
@@ -296,13 +294,12 @@ async function enviarOpcao(form) {
   S.opcoes.push(nova); S.novaOpcao = false; rascunho = false;
   if (it.status === "nao_iniciado") await atualizarItem(it.id, { status: "pesquisando" });
   render();
-  if (data?.produto) toast(nova.preco != null ? "Opção adicionada" : "Opção adicionada, sem preço na página");
-  else toast(MSG_LINK[data?.erro] ? `Opção salva só com o link. ${MSG_LINK[data.erro]}` : "Opção salva só com o link: não consegui ler a página.", true);
+  if (!data?.produto) toast(MSG_LINK[data?.erro] ? `Opção salva só com o link. ${MSG_LINK[data.erro]}` : "Opção salva só com o link: não consegui ler a página.", true);
 }
 
 async function enviarComentario(form) {
   const c = await salvar("comentarios", "insert", { item_id: S.item, texto: form.texto.value.trim() });
-  S.comentarios.push(c); render(); toast("Comentário enviado");
+  S.comentarios.push(c); render();
 }
 
 const FORMULARIOS = { "form-item": enviarItem, "form-opcao": enviarOpcao, "form-comentario": enviarComentario };
