@@ -344,6 +344,7 @@ const ACOES = {
   novo: () => abrirPainel("novo"),
   fechar: () => fecharPainel(),
   listaModo: (el) => { S.listaModo = el.dataset.v; render(); },
+  abaVistoria: (el) => { S.abaVistoria = el.dataset.v; render(); },
   filtro: (el) => { S.filtro[el.dataset.k] = el.dataset.v; render(); },
   finPor: (el) => { S.finPor = el.dataset.v; render(); },
   salvarOrc: salvarOrcamento,

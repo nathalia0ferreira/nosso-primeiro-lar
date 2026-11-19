@@ -408,3 +408,4 @@ a.painel:active { transform: scale(.98); }
   .mini-valor { font-size: 20px; }
   .paineis .mini-valor { font-size: 18px; }
 }
+.abrir-loja { margin-top: var(--s3); }

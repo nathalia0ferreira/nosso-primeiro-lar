@@ -1,7 +1,7 @@
 // Geração do HTML de cada tela. Só lê o estado; ações ficam em app.js.
-import { ETAPAS, ITEM_NOVO, VISTORIA, ehVistoria, ORDEM_PRIORIDADE, PRIORIDADES, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
+import { ETAPAS, ITEM_NOVO, PRODUTOS_VISTORIA, VISTORIA, ehProdutoVistoria, ehVistoria, ORDEM_PRIORIDADE, PRIORIDADES, STATUS, DATA_MUDANCA_PADRAO } from "./dominio.js";
 import { comprado, contagemRegressiva, maisBarata, resumo, totalOpcao } from "./calculos.js";
-import { brl, dataBR, esc, numeroParaCampo, pct } from "./formato.js";
+import { brl, dataBR, esc, numeroParaCampo, pct, urlOk } from "./formato.js";
 import { iconeDoComodo, iconeDoItem, svg } from "./icones.js";
 import { ICONES, barra, cabecalhoPagina, foto, linkExterno, progresso, segmentos } from "./ui.js";
 import { S, comodos, estimadoDe, fotoDe, itemPorId, meuId, nomeDe, opcoesDe } from "./estado.js";
@@ -20,7 +20,7 @@ function linhaItem(it) {
     ${foto(fotoDe(it), it.nome, "photo thumb", iconeDoItem(it))}
     <button class="open" data-act="abrir" data-id="${it.id}">
       <div class="name">${esc(it.nome)}${it.quantidade > 1 ? ` <span class="muted small">× ${it.quantidade}</span>` : ""}</div>
-      <span class="tag"><i class="dot ${comprado(it) ? "comprado" : it.prioridade}"></i>${ehVistoria(it) ? (comprado(it) ? "Conferido" : "A conferir") : `${PRIORIDADES[it.prioridade]} · ${STATUS[it.status]}`}${nOpcoes ? ` · ${nOpcoes} ${plural(nOpcoes, "opção", "opções")}` : ""}</span>
+      <span class="tag"><i class="dot ${comprado(it) ? "comprado" : it.prioridade}"></i>${ehProdutoVistoria(it) ? (comprado(it) ? "Comprado" : "A comprar") : ehVistoria(it) ? (comprado(it) ? "Conferido" : "A conferir") : `${PRIORIDADES[it.prioridade]} · ${STATUS[it.status]}`}${nOpcoes ? ` · ${nOpcoes} ${plural(nOpcoes, "opção", "opções")}` : ""}</span>
     </button>
     <span class="price">${valor != null ? brl(valor) : ""}</span>
   </div>`;
@@ -49,7 +49,7 @@ export function telaInicio() {
   const mes = c.alvo.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   const orc = S.config.orcamento_total;
   const esquecidos = compras().filter((i) => i.esquecido);
-  const vistoria = S.itens.filter(ehVistoria);
+  const vistoria = S.itens.filter((i) => ehVistoria(i) && !ehProdutoVistoria(i));
   const conta = (lista) => lista.filter(comprado).length;
   return `${dataDeHoje()}
     <section class="painel destaque">
@@ -97,8 +97,11 @@ function porCategoria(lista) {
 }
 
 /** Conteúdo filtrado da lista: um cômodo só, ou todos juntos (aba "Tudo"). Atualizado direto pela busca. */
+/** Na vistoria, só os itens da aba aberta (checklist ou produtos). */
+const daAba = (i) => i.comodo !== VISTORIA || ehProdutoVistoria(i) === (S.abaVistoria === "produtos");
+
 export function itensListaHTML(cm) {
-  if (cm) return porCategoria(filtrar(S.itens.filter((i) => i.comodo === cm)));
+  if (cm) return porCategoria(filtrar(S.itens.filter((i) => i.comodo === cm && daAba(i))));
   const blocos = comodos().map((c) => [c, filtrar(S.itens.filter((i) => i.comodo === c))]).filter(([, l]) => l.length);
   if (!blocos.length) return `<p class="empty">Nenhum item com esses filtros.</p>`;
   return blocos.map(([c, l]) => `<section class="grupo-comodo"><a class="grupo-titulo" href="${linkComodo(c)}"><h2 class="h2">${esc(c)}</h2>${ICONES.chev}</a>${porCategoria(l)}</section>`).join("");
@@ -135,15 +138,17 @@ export function telaLista() {
 /** Página de um cômodo: só os itens dele, por categoria. */
 export function telaComodo(cm) {
   if (!comodos().includes(cm)) return `<p class="empty">Cômodo não encontrado. <a href="#lista">Voltar para a lista</a></p>`;
-  const todos = S.itens.filter((i) => i.comodo === cm);
+  const todos = S.itens.filter((i) => i.comodo === cm && daAba(i));
   const t = resumo(todos, S.opcoes);
   const vistoria = cm === VISTORIA;
+  const produtos = vistoria && S.abaVistoria === "produtos";
   return `<a class="voltar" href="#lista">${ICONES.voltar} Lista</a>
     <section class="hero page comodo-hero">
       <span class="comodo-ico">${iconeDoComodo(cm)}</span>
       ${cabecalhoPagina(vistoria ? "Checklist" : "Cômodo", esc(cm))}
-      <div class="progress-box">${progresso(`${t.comprados} de ${t.total} ${vistoria ? "conferidos" : "comprados"}`, t.comprados, t.total)}</div>
+      <div class="progress-box">${progresso(`${t.comprados} de ${t.total} ${vistoria && !produtos ? "conferidos" : "comprados"}`, t.comprados, t.total)}</div>
     </section>
+    ${vistoria ? `<div class="toolbar">${segmentos([["checklist", "Checklist"], ["produtos", "Produtos"]], S.abaVistoria, 'data-act="abaVistoria"')}</div>` : ""}
     <div class="toolbar"><button class="btn sm" data-act="novo">Adicionar item</button></div>
     ${filtros(!vistoria)}
     <div class="rooms" id="rooms">${itensListaHTML(cm)}</div>`;
@@ -312,7 +317,8 @@ function secaoComentarios(it) {
 /** Painel lateral (ou inferior, no celular) com o item aberto; "" se não houver item. */
 export function painelItem() {
   const novo = S.item === "novo";
-  const it = novo ? { ...ITEM_NOVO, comodo: S.comodoAtual || ITEM_NOVO.comodo } : itemPorId(S.item);
+  const produtoVistoria = S.comodoAtual === VISTORIA && S.abaVistoria === "produtos";
+  const it = novo ? { ...ITEM_NOVO, comodo: S.comodoAtual || ITEM_NOVO.comodo, ...(produtoVistoria ? { categoria: PRODUTOS_VISTORIA } : {}) } : itemPorId(S.item);
   if (!it) { S.item = null; return ""; }
   return `<div class="overlay" data-act="fechar"></div>
   <aside class="sheet" role="dialog" aria-modal="true" aria-label="${esc(it.nome || "Novo item")}">
@@ -320,7 +326,7 @@ export function painelItem() {
     ${foto(novo ? null : fotoDe(it), it.nome || "+", "photo sheet-hero", iconeDoItem(it))}
     <div class="sheet-body">
       <div><span class="eyebrow">${esc(it.comodo)} · ${esc(it.categoria)}</span><h2 class="display sheet-title">${esc(it.nome || "Novo item")}</h2>
-        ${novo ? "" : historico(it)}</div>
+        ${novo ? "" : historico(it)}${!novo && urlOk(it.link_produto) ? `<div class="opt-actions abrir-loja">${linkExterno(it.link_produto, "Abrir na loja")}</div>` : ""}</div>
       ${novo || ehVistoria(it) ? "" : `<div><span class="eyebrow">Status</span><div class="status-pick" role="group" aria-label="Status do item">${Object.entries(STATUS).map(([k, l]) => `<button type="button" data-act="status" data-v="${k}" class="${it.status === k ? "on" : ""}" aria-pressed="${it.status === k}">${l}</button>`).join("")}</div></div>`}
       ${formItem(it, novo)}
       ${novo ? "" : (ehVistoria(it) ? "" : secaoOpcoes(it)) + secaoComentarios(it)}

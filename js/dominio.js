@@ -3,6 +3,9 @@
 /** Checklist da vistoria do apartamento: aparece na lista, mas não é compra (fica fora de totais, finanças e etapas). */
 export const VISTORIA = "Vistoria do apartamento";
 export const ehVistoria = (item) => item.comodo === VISTORIA;
+/** Coisas para comprar e levar no dia da vistoria (aba "Produtos" da vistoria). */
+export const PRODUTOS_VISTORIA = "Produtos para a vistoria";
+export const ehProdutoVistoria = (item) => ehVistoria(item) && item.categoria === PRODUTOS_VISTORIA;
 
 export const COMODOS = ["Cozinha", "Quarto", "Banheiro", "Sala", "Lavanderia", "Organização e utilidades", "Decoração", VISTORIA];
 

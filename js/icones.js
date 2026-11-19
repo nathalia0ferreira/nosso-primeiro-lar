@@ -65,6 +65,8 @@ const D = {
   carteira: '<path d="M4 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a1 1 0 0 1-1-1V7zM4 7l11-3v3"/><path d="M16 13h.01"/>',
   calendario: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   sacola: '<path d="M5 8h14l-1 13H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+  bolinha: '<circle cx="12" cy="12" r="8"/><path d="M9 9.5a3.5 3.5 0 0 1 3-1.5"/>',
+  adesivo: '<path d="M5 4h14v9l-6 7H5z"/><path d="M13 20v-5a2 2 0 0 1 2-2h4"/>',
   casa: '<path d="M3 11l9-7 9 7M5 10v10h14V10M10 20v-6h4v6"/>',
 };
 
@@ -74,6 +76,7 @@ const REGRAS = [
   [/ventilador|climatiza/, "ventilador"], [/lanterna/, "lanterna"], [/tesoura/, "tesoura"], [/desentupidor|assento sanitario|vaso sanitario/, "sanitario"],
   [/isqueiro|acendedor|gas\b/, "fogao"], [/assadeira|formas? de/, "panela"], [/ralador|peneira/, "talheres"],
   [/documento|contrato|laudo|memorial|recibo/, "documento"], [/portas e janelas/, "porta"],
+  [/bolinha|gude/, "bolinha"], [/adesivo|etiqueta/, "adesivo"],
   [/escorredor/, "escorredor"], [/geladeira|freezer/, "geladeira"], [/fogao|cooktop/, "fogao"], [/micro-?ondas/, "microondas"],
   [/air ?fryer|fritadeira/, "airfryer"], [/liquidificador|batedeira|cafeteira|sanduicheira|torradeira|eletroport/, "eletroportatil"],
   [/xicara|caneca/, "xicara"], [/copo|taca/, "copo"], [/panos? de prato/, "toalha"], [/prato|louca|tigela/, "prato"],
@@ -101,7 +104,8 @@ const normalizar = (s) => String(s ?? "").toLowerCase().normalize("NFD").replace
 /** Nome do ícone para o item: tenta o nome, depois a categoria, depois o cômodo; senão, a casinha. */
 export function nomeDoIcone(item) {
   // Vistoria: o ícone vem da categoria (elétrica, hidráulica...), não das palavras de cada tarefa.
-  const fontes = item.comodo === "Vistoria do apartamento" ? [item.categoria] : [item.nome, item.categoria, item.comodo];
+  const tarefa = item.comodo === "Vistoria do apartamento" && item.categoria !== "Produtos para a vistoria";
+  const fontes = tarefa ? [item.categoria] : [item.nome, item.categoria, item.comodo];
   for (const texto of fontes.map(normalizar)) {
     const regra = REGRAS.find(([re]) => re.test(texto));
     if (regra) return regra[1];

@@ -30,6 +30,11 @@ test("ícone: itens novos da pesquisa e vistoria", () => {
   assert.equal(v("Testar portas e fechaduras", "Portas e janelas"), "porta");
   assert.equal(v("Fotografar tudo", "Documentos"), "documento");
   assert.equal(v("Paredes sem fissuras", "Acabamentos"), "checklist");
+  // produtos da vistoria usam o nome
+  assert.equal(v("Testador de tomada", "Produtos para a vistoria"), "eletrica");
+  assert.equal(v("Bolinha de gude", "Produtos para a vistoria"), "bolinha");
+  assert.equal(v("Adesivos vermelhos", "Produtos para a vistoria"), "adesivo");
+  assert.equal(v("Trena", "Produtos para a vistoria"), "trena");
 });
 
 test("ícone: categoria e cômodo como reserva; casinha por último", () => {
