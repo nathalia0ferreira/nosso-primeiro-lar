@@ -10,6 +10,7 @@ const compras = () => S.itens.filter((i) => !ehVistoria(i));
 const resumoDe = (itens = compras()) => resumo(itens, S.opcoes);
 const pendentesPrimeiro = (a, b) => comprado(a) - comprado(b);
 const plural = (n, um, varios) => (n > 1 ? varios : um);
+const estatistica = (rotulo, valor) => `<div class="stat"><span class="eyebrow">${rotulo}</span><b>${valor}</b></div>`;
 
 /* ---------- componentes de item ---------- */
 function linhaItem(it) {
